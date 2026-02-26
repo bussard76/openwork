@@ -10,6 +10,7 @@ import { LineComment as LineCommentView, LineCommentEditor } from "@opencode-ai/
 import { Mark } from "@opencode-ai/ui/logo"
 import { Tabs } from "@opencode-ai/ui/tabs"
 import { ScrollView } from "@opencode-ai/ui/scroll-view"
+import { Button } from "@opencode-ai/ui/button"
 import { useLayout } from "@/context/layout"
 import { selectionFromLines, useFile, type FileSelection, type FileState, type SelectedLineRange } from "@/context/file"
 import { useComments } from "@/context/comments"
@@ -94,12 +95,9 @@ function DocxPreview(props: { path: string }) {
     <div class="h-full flex flex-col">
       <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
         <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
-        <button
-          onClick={handleOpenInWord}
-          class="px-3 py-1.5 text-12-medium bg-button-primary text-text-on-color rounded-md hover:bg-button-primary-hover"
-        >
+        <Button onClick={handleOpenInWord} size="small" variant="primary">
           Open in Word
-        </button>
+        </Button>
       </div>
       <div class="flex-1 overflow-auto">
         <Show when={loading()}>
@@ -171,12 +169,9 @@ function XlsxPreview(props: { path: string }) {
     <div class="h-full flex flex-col">
       <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
         <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
-        <button
-          onClick={handleOpenInExcel}
-          class="px-3 py-1.5 text-12-medium bg-button-primary text-text-on-color rounded-md hover:bg-button-primary-hover"
-        >
+        <Button onClick={handleOpenInExcel} size="small" variant="primary">
           Open in Excel
-        </button>
+        </Button>
       </div>
       <div class="flex-1 overflow-auto">
         <Show when={loading()}>
