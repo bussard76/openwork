@@ -107,19 +107,21 @@ export function SessionSidePanel(props: {
   })
 
   const handleFileClick = (node: { path: string }) => {
-    // Check if it's a .docx file
-    if (node.path.toLowerCase().endsWith(".docx")) {
+    const lowerPath = node.path.toLowerCase()
+    // Check if it's a .docx or .xlsx file
+    if (lowerPath.endsWith(".docx") || lowerPath.endsWith(".xlsx")) {
       // Get the absolute path by combining the workspace directory with the relative file path
       const workspaceDir = decode64(params.dir)
       if (workspaceDir) {
         const absolutePath = `${workspaceDir}/${node.path}`
-        // Open as a docx:// tab
-        const docxTab = `docx://${absolutePath}`
-        tabs().open(docxTab)
+        // Open as a docx:// or xlsx:// tab
+        const protocol = lowerPath.endsWith(".docx") ? "docx://" : "xlsx://"
+        const tab = `${protocol}${absolutePath}`
+        tabs().open(tab)
         return
       }
     }
-    // For non-docx files, open in editor as usual
+    // For regular files, open in editor as usual
     openTab(file.tab(node.path))
   }
 
@@ -134,8 +136,9 @@ export function SessionSidePanel(props: {
     const active = tabs().active()
     if (active === "context") return "context"
     if (active === "review" && reviewTab()) return "review"
-    // Handle docx:// tabs
-    if (active && (active.startsWith("docx://") || file.pathFromTab(active))) return normalizeTab(active)
+    // Handle docx:// and xlsx:// tabs
+    if (active && (active.startsWith("docx://") || active.startsWith("xlsx://") || file.pathFromTab(active)))
+      return normalizeTab(active)
 
     const first = openedTabs()[0]
     if (first) return first

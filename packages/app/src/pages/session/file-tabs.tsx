@@ -118,6 +118,85 @@ function DocxPreview(props: { path: string }) {
   )
 }
 
+function XlsxPreview(props: { path: string }) {
+  const platform = usePlatform()
+  const language = useLanguage()
+  const [loading, setLoading] = createSignal(true)
+  const [error, setError] = createSignal<string>()
+  const [htmlContent, setHtmlContent] = createSignal<string>()
+
+  createEffect(() => {
+    const loadXlsx = async () => {
+      if (platform.platform !== "desktop") return
+
+      try {
+        setLoading(true)
+        setError(undefined)
+
+        // Check if we're in desktop environment
+        if (typeof window === "undefined" || !(window as any).__TAURI__) {
+          throw new Error("Desktop environment not available")
+        }
+
+        // Call Tauri invoke directly
+        const { invoke } = (window as any).__TAURI__.core
+        const html = await invoke("convert_xlsx_to_html_command", { path: props.path })
+        setHtmlContent(html)
+        setLoading(false)
+      } catch (err) {
+        console.error("Failed to load XLSX:", err)
+        setError(err instanceof Error ? err.message : "Failed to load spreadsheet")
+        setLoading(false)
+      }
+    }
+
+    loadXlsx()
+  })
+
+  const handleOpenInExcel = async () => {
+    if (platform.platform !== "desktop") return
+
+    try {
+      await platform.openPath?.(props.path)
+    } catch (err) {
+      console.error("Failed to open in Excel:", err)
+      showToast({
+        variant: "error",
+        title: language.t("toast.file.loadFailed.title"),
+      })
+    }
+  }
+
+  return (
+    <div class="h-full flex flex-col">
+      <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
+        <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
+        <button
+          onClick={handleOpenInExcel}
+          class="px-3 py-1.5 text-12-medium bg-button-primary text-text-on-color rounded-md hover:bg-button-primary-hover"
+        >
+          Open in Excel
+        </button>
+      </div>
+      <div class="flex-1 overflow-auto">
+        <Show when={loading()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{language.t("common.loading")}...</div>
+          </div>
+        </Show>
+        <Show when={error()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{error()}</div>
+          </div>
+        </Show>
+        <Show when={htmlContent()}>
+          <div class="xlsx-container p-6" innerHTML={htmlContent()} />
+        </Show>
+      </div>
+    </div>
+  )
+}
+
 export function FileTabContent(props: { tab: string }) {
   const params = useParams()
   const layout = useLayout()
@@ -142,15 +221,22 @@ export function FileTabContent(props: { tab: string }) {
     return props.tab.slice("docx://".length)
   })
 
+  const isXlsx = createMemo(() => props.tab.startsWith("xlsx://"))
+  const xlsxPath = createMemo(() => {
+    if (!isXlsx()) return
+    return props.tab.slice("xlsx://".length)
+  })
+
   const path = createMemo(() => {
     if (isDocx()) return docxPath()
+    if (isXlsx()) return xlsxPath()
     return file.pathFromTab(props.tab)
   })
   const state = createMemo((): FileState | undefined => {
     const p = path()
     if (!p) return
-    if (isDocx()) {
-      // DOCX files don't need file state - return minimal state
+    if (isDocx() || isXlsx()) {
+      // DOCX/XLSX files don't need file state - return minimal state
       return {
         path: p,
         name: p.split("/").pop() || p,
@@ -641,6 +727,7 @@ export function FileTabContent(props: { tab: string }) {
       >
         <Switch>
           <Match when={isDocx() && docxPath()}>{(p) => <DocxPreview path={p()} />}</Match>
+          <Match when={isXlsx() && xlsxPath()}>{(p) => <XlsxPreview path={p()} />}</Match>
           <Match when={state()?.loaded && isImage()}>
             <div class="px-6 py-4 pb-40">
               <img

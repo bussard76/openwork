@@ -25,3 +25,34 @@ div[data-tauri-decorum-tb] {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   margin-bottom: 0.5in;
 }
+
+/* XLSX Preview Styles */
+.xlsx-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.xlsx-container table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
+
+.xlsx-container th,
+.xlsx-container td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.xlsx-container th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.xlsx-container tr:nth-child(even) {
+  background-color: #f9f9f9;
+}

@@ -10,6 +10,7 @@ mod os;
 mod server;
 mod window_customizer;
 mod windows;
+mod xlsx;
 
 use crate::cli::CommandChild;
 use futures::{
@@ -321,6 +322,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(crate::window_customizer::PinchZoomDisablePlugin)
         .plugin(tauri_plugin_decorum::init())
         .invoke_handler(builder.invoke_handler())
@@ -373,7 +375,8 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             markdown::parse_markdown_command,
             check_app_exists,
             wsl_path,
-            resolve_app_path
+            resolve_app_path,
+            xlsx::convert_xlsx_to_html_command
         ])
         .events(tauri_specta::collect_events![
             LoadingWindowComplete,
