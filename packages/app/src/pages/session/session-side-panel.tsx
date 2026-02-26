@@ -21,6 +21,7 @@ import { useFile, type SelectedLineRange } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { useSync } from "@/context/sync"
+import { decode64 } from "@/utils/base64"
 import { createFileTabListSync } from "@/pages/session/file-tab-scroll"
 import { FileTabContent } from "@/pages/session/file-tabs"
 import { createOpenSessionFileTab, getTabReorderIndex } from "@/pages/session/helpers"
@@ -105,6 +106,23 @@ export function SessionSidePanel(props: {
     setActive: tabs().setActive,
   })
 
+  const handleFileClick = (node: { path: string }) => {
+    // Check if it's a .docx file
+    if (node.path.toLowerCase().endsWith(".docx")) {
+      // Get the absolute path by combining the workspace directory with the relative file path
+      const workspaceDir = decode64(params.dir)
+      if (workspaceDir) {
+        const absolutePath = `${workspaceDir}/${node.path}`
+        // Open as a docx:// tab
+        const docxTab = `docx://${absolutePath}`
+        tabs().open(docxTab)
+        return
+      }
+    }
+    // For non-docx files, open in editor as usual
+    openTab(file.tab(node.path))
+  }
+
   const contextOpen = createMemo(() => tabs().active() === "context" || tabs().all().includes("context"))
   const openedTabs = createMemo(() =>
     tabs()
@@ -116,7 +134,8 @@ export function SessionSidePanel(props: {
     const active = tabs().active()
     if (active === "context") return "context"
     if (active === "review" && reviewTab()) return "review"
-    if (active && file.pathFromTab(active)) return normalizeTab(active)
+    // Handle docx:// tabs
+    if (active && (active.startsWith("docx://") || file.pathFromTab(active))) return normalizeTab(active)
 
     const first = openedTabs()[0]
     if (first) return first
@@ -384,12 +403,7 @@ export function SessionSidePanel(props: {
                   </Switch>
                 </Tabs.Content>
                 <Tabs.Content value="all" class="bg-background-stronger px-3 py-0">
-                  <FileTree
-                    path=""
-                    modified={diffFiles()}
-                    kinds={kinds()}
-                    onFileClick={(node) => openTab(file.tab(node.path))}
-                  />
+                  <FileTree path="" modified={diffFiles()} kinds={kinds()} onFileClick={handleFileClick} />
                 </Tabs.Content>
               </Tabs>
             </div>

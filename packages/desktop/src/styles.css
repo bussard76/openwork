@@ -5,3 +5,23 @@ button#decorum-tb-close,
 div[data-tauri-decorum-tb] {
   height: calc(var(--spacing) * 10) !important;
 }
+
+/* DOCX Preview Styles */
+.docx-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.docx-container .docx-wrapper {
+  max-width: 100%;
+}
+
+.docx-container section.docx {
+  background: white;
+  min-height: 11in;
+  padding: 1in;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  margin-bottom: 0.5in;
+}

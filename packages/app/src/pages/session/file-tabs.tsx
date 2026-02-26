@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, Match, on, onCleanup, Show, Switch } from "solid-js"
+import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, Show, Switch } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { Dynamic } from "solid-js/web"
 import { useParams } from "@solidjs/router"
@@ -11,17 +11,111 @@ import { Mark } from "@opencode-ai/ui/logo"
 import { Tabs } from "@opencode-ai/ui/tabs"
 import { ScrollView } from "@opencode-ai/ui/scroll-view"
 import { useLayout } from "@/context/layout"
-import { selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
+import { selectionFromLines, useFile, type FileSelection, type FileState, type SelectedLineRange } from "@/context/file"
 import { useComments } from "@/context/comments"
 import { useLanguage } from "@/context/language"
 import { usePrompt } from "@/context/prompt"
 import { getSessionHandoff } from "@/pages/session/handoff"
+import { usePlatform } from "@/context/platform"
 
 const formatCommentLabel = (range: SelectedLineRange) => {
   const start = Math.min(range.start, range.end)
   const end = Math.max(range.start, range.end)
   if (start === end) return `line ${start}`
   return `lines ${start}-${end}`
+}
+
+function DocxPreview(props: { path: string }) {
+  const platform = usePlatform()
+  const language = useLanguage()
+  const [loading, setLoading] = createSignal(true)
+  const [error, setError] = createSignal<string>()
+  let containerRef: HTMLDivElement | undefined
+
+  createEffect(() => {
+    const loadDocx = async () => {
+      if (!containerRef) return
+      if (platform.platform !== "desktop") return
+
+      try {
+        setLoading(true)
+        setError(undefined)
+
+        // Dynamic imports for desktop-only modules
+        const [docxPreview, tauriFs] = await Promise.all([
+          import("docx-preview"),
+          import("@tauri-apps/plugin-fs").catch(() => null),
+        ])
+
+        if (!tauriFs) {
+          throw new Error("File system plugin not available")
+        }
+
+        const fileData = await tauriFs.readFile(props.path)
+
+        // Clear container
+        containerRef.innerHTML = ""
+
+        // Render DOCX
+        await docxPreview.renderAsync(fileData.buffer, containerRef, undefined, {
+          className: "docx-preview",
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+        })
+
+        setLoading(false)
+      } catch (err) {
+        console.error("Failed to load DOCX:", err)
+        setError(err instanceof Error ? err.message : "Failed to load document")
+        setLoading(false)
+      }
+    }
+
+    loadDocx()
+  })
+
+  const handleOpenInWord = async () => {
+    if (platform.platform !== "desktop") return
+
+    try {
+      // Use platform.openPath instead of direct plugin import
+      await platform.openPath?.(props.path)
+    } catch (err) {
+      console.error("Failed to open in Word:", err)
+      showToast({
+        variant: "error",
+        title: language.t("toast.file.loadFailed.title"),
+      })
+    }
+  }
+
+  return (
+    <div class="h-full flex flex-col">
+      <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
+        <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
+        <button
+          onClick={handleOpenInWord}
+          class="px-3 py-1.5 text-12-medium bg-button-primary text-text-on-color rounded-md hover:bg-button-primary-hover"
+        >
+          Open in Word
+        </button>
+      </div>
+      <div class="flex-1 overflow-auto">
+        <Show when={loading()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{language.t("common.loading")}...</div>
+          </div>
+        </Show>
+        <Show when={error()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{error()}</div>
+          </div>
+        </Show>
+        <div ref={containerRef} class="docx-container p-6" />
+      </div>
+    </div>
+  )
 }
 
 export function FileTabContent(props: { tab: string }) {
@@ -42,10 +136,30 @@ export function FileTabContent(props: { tab: string }) {
   let pending: { x: number; y: number } | undefined
   let codeScroll: HTMLElement[] = []
 
-  const path = createMemo(() => file.pathFromTab(props.tab))
-  const state = createMemo(() => {
+  const isDocx = createMemo(() => props.tab.startsWith("docx://"))
+  const docxPath = createMemo(() => {
+    if (!isDocx()) return
+    return props.tab.slice("docx://".length)
+  })
+
+  const path = createMemo(() => {
+    if (isDocx()) return docxPath()
+    return file.pathFromTab(props.tab)
+  })
+  const state = createMemo((): FileState | undefined => {
     const p = path()
     if (!p) return
+    if (isDocx()) {
+      // DOCX files don't need file state - return minimal state
+      return {
+        path: p,
+        name: p.split("/").pop() || p,
+        loaded: true,
+        loading: false,
+        error: undefined,
+        content: undefined,
+      }
+    }
     return file.get(p)
   })
   const contents = createMemo(() => state()?.content?.content ?? "")
@@ -526,6 +640,7 @@ export function FileTabContent(props: { tab: string }) {
         onScroll={handleScroll as any}
       >
         <Switch>
+          <Match when={isDocx() && docxPath()}>{(p) => <DocxPreview path={p()} />}</Match>
           <Match when={state()?.loaded && isImage()}>
             <div class="px-6 py-4 pb-40">
               <img
