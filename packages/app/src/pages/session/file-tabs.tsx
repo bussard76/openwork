@@ -192,6 +192,89 @@ function XlsxPreview(props: { path: string }) {
   )
 }
 
+function PdfPreview(props: { path: string }) {
+  const platform = usePlatform()
+  const language = useLanguage()
+  const [loading, setLoading] = createSignal(true)
+  const [error, setError] = createSignal<string>()
+  const [pdfUrl, setPdfUrl] = createSignal<string>()
+
+  createEffect(() => {
+    const loadPdf = async () => {
+      if (platform.platform !== "desktop") return
+
+      try {
+        setLoading(true)
+        setError(undefined)
+
+        // Dynamic import for desktop-only module
+        const tauriFs = await import("@tauri-apps/plugin-fs").catch(() => null)
+
+        if (!tauriFs) {
+          throw new Error("File system plugin not available")
+        }
+
+        const fileData = await tauriFs.readFile(props.path)
+        const blob = new Blob([fileData], { type: "application/pdf" })
+        const url = URL.createObjectURL(blob)
+        setPdfUrl(url)
+        setLoading(false)
+      } catch (err) {
+        console.error("Failed to load PDF:", err)
+        setError(err instanceof Error ? err.message : "Failed to load PDF")
+        setLoading(false)
+      }
+    }
+
+    loadPdf()
+  })
+
+  onCleanup(() => {
+    const url = pdfUrl()
+    if (url) URL.revokeObjectURL(url)
+  })
+
+  const handleOpenInPdfViewer = async () => {
+    if (platform.platform !== "desktop") return
+
+    try {
+      await platform.openPath?.(props.path)
+    } catch (err) {
+      console.error("Failed to open PDF:", err)
+      showToast({
+        variant: "error",
+        title: language.t("toast.file.loadFailed.title"),
+      })
+    }
+  }
+
+  return (
+    <div class="h-full flex flex-col">
+      <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
+        <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
+        <Button onClick={handleOpenInPdfViewer} size="small" variant="primary">
+          Open in PDF Viewer
+        </Button>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <Show when={loading()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{language.t("common.loading")}...</div>
+          </div>
+        </Show>
+        <Show when={error()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{error()}</div>
+          </div>
+        </Show>
+        <Show when={pdfUrl()}>
+          <iframe src={pdfUrl()} class="w-full h-full border-0 pdf-preview" />
+        </Show>
+      </div>
+    </div>
+  )
+}
+
 export function FileTabContent(props: { tab: string }) {
   const params = useParams()
   const layout = useLayout()
@@ -222,16 +305,23 @@ export function FileTabContent(props: { tab: string }) {
     return props.tab.slice("xlsx://".length)
   })
 
+  const isPdf = createMemo(() => props.tab.startsWith("pdf://"))
+  const pdfPath = createMemo(() => {
+    if (!isPdf()) return
+    return props.tab.slice("pdf://".length)
+  })
+
   const path = createMemo(() => {
     if (isDocx()) return docxPath()
     if (isXlsx()) return xlsxPath()
+    if (isPdf()) return pdfPath()
     return file.pathFromTab(props.tab)
   })
   const state = createMemo((): FileState | undefined => {
     const p = path()
     if (!p) return
-    if (isDocx() || isXlsx()) {
-      // DOCX/XLSX files don't need file state - return minimal state
+    if (isDocx() || isXlsx() || isPdf()) {
+      // DOCX/XLSX/PDF files don't need file state - return minimal state
       return {
         path: p,
         name: p.split("/").pop() || p,
@@ -723,6 +813,7 @@ export function FileTabContent(props: { tab: string }) {
         <Switch>
           <Match when={isDocx() && docxPath()}>{(p) => <DocxPreview path={p()} />}</Match>
           <Match when={isXlsx() && xlsxPath()}>{(p) => <XlsxPreview path={p()} />}</Match>
+          <Match when={isPdf() && pdfPath()}>{(p) => <PdfPreview path={p()} />}</Match>
           <Match when={state()?.loaded && isImage()}>
             <div class="px-6 py-4 pb-40">
               <img

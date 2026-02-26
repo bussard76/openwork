@@ -108,14 +108,14 @@ export function SessionSidePanel(props: {
 
   const handleFileClick = (node: { path: string }) => {
     const lowerPath = node.path.toLowerCase()
-    // Check if it's a .docx or .xlsx file
-    if (lowerPath.endsWith(".docx") || lowerPath.endsWith(".xlsx")) {
+    // Check if it's a .docx, .xlsx, or .pdf file
+    if (lowerPath.endsWith(".docx") || lowerPath.endsWith(".xlsx") || lowerPath.endsWith(".pdf")) {
       // Get the absolute path by combining the workspace directory with the relative file path
       const workspaceDir = decode64(params.dir)
       if (workspaceDir) {
         const absolutePath = `${workspaceDir}/${node.path}`
-        // Open as a docx:// or xlsx:// tab
-        const protocol = lowerPath.endsWith(".docx") ? "docx://" : "xlsx://"
+        // Open as a docx://, xlsx://, or pdf:// tab
+        const protocol = lowerPath.endsWith(".docx") ? "docx://" : lowerPath.endsWith(".xlsx") ? "xlsx://" : "pdf://"
         const tab = `${protocol}${absolutePath}`
         tabs().open(tab)
         return

@@ -31,12 +31,15 @@ export function SortableTab(props: { tab: string; onTabClose: (tab: string) => v
   const command = useCommand()
   const sortable = createSortable(props.tab)
   const path = createMemo(() => {
-    // Handle docx:// and xlsx:// tabs
+    // Handle docx://, xlsx://, and pdf:// tabs
     if (props.tab.startsWith("docx://")) {
       return props.tab.slice("docx://".length)
     }
     if (props.tab.startsWith("xlsx://")) {
       return props.tab.slice("xlsx://".length)
+    }
+    if (props.tab.startsWith("pdf://")) {
+      return props.tab.slice("pdf://".length)
     }
     return file.pathFromTab(props.tab)
   })

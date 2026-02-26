@@ -56,3 +56,8 @@ div[data-tauri-decorum-tb] {
 .xlsx-container tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
+/* PDF Preview Styles */
+.pdf-preview {
+  background: white;
+}
