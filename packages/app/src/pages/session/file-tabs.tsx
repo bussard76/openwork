@@ -200,6 +200,9 @@ function PdfPreview(props: { path: string }) {
   const [pdfUrl, setPdfUrl] = createSignal<string>()
 
   createEffect(() => {
+    // Track props.path explicitly for reactivity
+    const path = props.path
+
     const loadPdf = async () => {
       if (platform.platform !== "desktop") return
 
@@ -214,7 +217,7 @@ function PdfPreview(props: { path: string }) {
           throw new Error("File system plugin not available")
         }
 
-        const fileData = await tauriFs.readFile(props.path)
+        const fileData = await tauriFs.readFile(path)
         const blob = new Blob([fileData], { type: "application/pdf" })
         const url = URL.createObjectURL(blob)
         setPdfUrl(url)

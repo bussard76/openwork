@@ -118,6 +118,8 @@ export function SessionSidePanel(props: {
         const protocol = lowerPath.endsWith(".docx") ? "docx://" : lowerPath.endsWith(".xlsx") ? "xlsx://" : "pdf://"
         const tab = `${protocol}${absolutePath}`
         tabs().open(tab)
+        openReviewPanel()
+        tabs().setActive(tab)
         return
       }
     }
@@ -136,8 +138,14 @@ export function SessionSidePanel(props: {
     const active = tabs().active()
     if (active === "context") return "context"
     if (active === "review" && reviewTab()) return "review"
-    // Handle docx:// and xlsx:// tabs
-    if (active && (active.startsWith("docx://") || active.startsWith("xlsx://") || file.pathFromTab(active)))
+    // Handle docx://, xlsx://, and pdf:// tabs
+    if (
+      active &&
+      (active.startsWith("docx://") ||
+        active.startsWith("xlsx://") ||
+        active.startsWith("pdf://") ||
+        file.pathFromTab(active))
+    )
       return normalizeTab(active)
 
     const first = openedTabs()[0]
