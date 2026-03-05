@@ -409,7 +409,9 @@ createMenu((id) => {
 })
 void listenForDeepLinks()
 
-render(() => {
+render(() => <App />, root!)
+
+function App() {
   const platform = createPlatform()
 
   const [defaultServer] = createResource(() =>
@@ -472,7 +474,7 @@ render(() => {
       </AppBaseProviders>
     </PlatformProvider>
   )
-}, root!)
+}
 
 // Gate component that waits for the server to be ready
 function ServerGate(props: { children: (data: ServerReadyData) => JSX.Element }) {
