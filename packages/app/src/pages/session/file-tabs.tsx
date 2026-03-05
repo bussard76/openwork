@@ -2,7 +2,7 @@ import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, Show
 import { createStore, produce } from "solid-js/store"
 import { Dynamic } from "solid-js/web"
 import { useParams } from "@solidjs/router"
-import { useCodeComponent } from "@opencode-ai/ui/context/code"
+import { useFileComponent } from "@opencode-ai/ui/context/file"
 import { sampledChecksum } from "@opencode-ai/util/encode"
 import { decode64 } from "@/utils/base64"
 import { showToast } from "@opencode-ai/ui/toast"
@@ -285,7 +285,7 @@ export function FileTabContent(props: { tab: string }) {
   const comments = useComments()
   const language = useLanguage()
   const prompt = usePrompt()
-  const codeComponent = useCodeComponent()
+  const codeComponent = useFileComponent()
 
   const sessionKey = createMemo(() => `${params.dir}${params.id ? "/" + params.id : ""}`)
   const tabs = createMemo(() => layout.tabs(sessionKey))
