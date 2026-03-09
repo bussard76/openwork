@@ -50,7 +50,12 @@ export const createOpenSessionFileTab = (input: {
     input.openTab(next)
 
     // Handle special protocol tabs (pdf://, docx://, xlsx://)
-    if (next.startsWith("pdf://") || next.startsWith("docx://") || next.startsWith("xlsx://")) {
+    if (
+      next.startsWith("pdf://") ||
+      next.startsWith("docx://") ||
+      next.startsWith("xlsx://") ||
+      next.startsWith("pptx://")
+    ) {
       input.openReviewPanel()
       input.setActive(next)
       return
