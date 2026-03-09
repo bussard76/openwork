@@ -278,6 +278,80 @@ function PdfPreview(props: { path: string }) {
   )
 }
 
+function PptxPreview(props: { path: string }) {
+  const platform = usePlatform()
+  const language = useLanguage()
+  const [loading, setLoading] = createSignal(true)
+  const [error, setError] = createSignal<string>()
+  const [pdfUrl, setPdfUrl] = createSignal<string>()
+
+  createEffect(() => {
+    const path = props.path
+
+    const load = async () => {
+      if (platform.platform !== "desktop") return
+
+      try {
+        setLoading(true)
+        setError(undefined)
+
+        const bytes = await platform.convertPptxToPdf?.(path)
+        if (!bytes) throw new Error("Conversion returned no data")
+        const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" })
+        setPdfUrl(URL.createObjectURL(blob))
+        setLoading(false)
+      } catch (err) {
+        console.error("Failed to load PPTX:", err)
+        setError(err instanceof Error ? err.message : "Failed to load presentation")
+        setLoading(false)
+      }
+    }
+
+    load()
+  })
+
+  onCleanup(() => {
+    const url = pdfUrl()
+    if (url) URL.revokeObjectURL(url)
+  })
+
+  const handleOpen = async () => {
+    if (platform.platform !== "desktop") return
+    try {
+      await platform.openPath?.(props.path)
+    } catch (err) {
+      console.error("Failed to open PPTX:", err)
+      showToast({ variant: "error", title: language.t("toast.file.loadFailed.title") })
+    }
+  }
+
+  return (
+    <div class="h-full flex flex-col">
+      <div class="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
+        <div class="text-14-semibold text-text-strong">{props.path.split("/").pop()}</div>
+        <Button onClick={handleOpen} size="small" variant="primary">
+          Open in PowerPoint
+        </Button>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <Show when={loading()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{language.t("common.loading")}...</div>
+          </div>
+        </Show>
+        <Show when={error()}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-14-regular text-text-weak">{error()}</div>
+          </div>
+        </Show>
+        <Show when={pdfUrl()}>
+          <iframe src={pdfUrl()} class="w-full h-full border-0 pdf-preview" />
+        </Show>
+      </div>
+    </div>
+  )
+}
+
 export function FileTabContent(props: { tab: string }) {
   const params = useParams()
   const layout = useLayout()
@@ -314,16 +388,23 @@ export function FileTabContent(props: { tab: string }) {
     return props.tab.slice("pdf://".length)
   })
 
+  const isPptx = createMemo(() => props.tab.startsWith("pptx://"))
+  const pptxPath = createMemo(() => {
+    if (!isPptx()) return
+    return props.tab.slice("pptx://".length)
+  })
+
   const path = createMemo(() => {
     if (isDocx()) return docxPath()
     if (isXlsx()) return xlsxPath()
     if (isPdf()) return pdfPath()
+    if (isPptx()) return pptxPath()
     return file.pathFromTab(props.tab)
   })
   const state = createMemo((): FileState | undefined => {
     const p = path()
     if (!p) return
-    if (isDocx() || isXlsx() || isPdf()) {
+    if (isDocx() || isXlsx() || isPdf() || isPptx()) {
       // DOCX/XLSX/PDF files don't need file state - return minimal state
       return {
         path: p,
@@ -817,6 +898,7 @@ export function FileTabContent(props: { tab: string }) {
           <Match when={isDocx() && docxPath()}>{(p) => <DocxPreview path={p()} />}</Match>
           <Match when={isXlsx() && xlsxPath()}>{(p) => <XlsxPreview path={p()} />}</Match>
           <Match when={isPdf() && pdfPath()}>{(p) => <PdfPreview path={p()} />}</Match>
+          <Match when={isPptx() && pptxPath()}>{(p) => <PptxPreview path={p()} />}</Match>
           <Match when={state()?.loaded && isImage()}>
             <div class="px-6 py-4 pb-40">
               <img
