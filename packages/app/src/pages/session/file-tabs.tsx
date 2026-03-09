@@ -281,9 +281,9 @@ function PdfPreview(props: { path: string }) {
 function PptxPreview(props: { path: string }) {
   const platform = usePlatform()
   const language = useLanguage()
-  const [loading, setLoading] = createSignal(true)
-  const [error, setError] = createSignal<string>()
-  const [pdfUrl, setPdfUrl] = createSignal<string>()
+  const [state, setState] = createStore<{ loading: boolean; error?: string; url?: string }>({
+    loading: true,
+  })
 
   createEffect(() => {
     const path = props.path
@@ -292,18 +292,18 @@ function PptxPreview(props: { path: string }) {
       if (platform.platform !== "desktop") return
 
       try {
-        setLoading(true)
-        setError(undefined)
+        setState("loading", true)
+        setState("error", undefined)
 
         const bytes = await platform.convertPptxToPdf?.(path)
         if (!bytes) throw new Error("Conversion returned no data")
         const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" })
-        setPdfUrl(URL.createObjectURL(blob))
-        setLoading(false)
+        setState("url", URL.createObjectURL(blob))
+        setState("loading", false)
       } catch (err) {
         console.error("Failed to load PPTX:", err)
-        setError(err instanceof Error ? err.message : "Failed to load presentation")
-        setLoading(false)
+        setState("error", err instanceof Error ? err.message : "Failed to load presentation")
+        setState("loading", false)
       }
     }
 
@@ -311,7 +311,7 @@ function PptxPreview(props: { path: string }) {
   })
 
   onCleanup(() => {
-    const url = pdfUrl()
+    const url = state.url
     if (url) URL.revokeObjectURL(url)
   })
 
@@ -334,18 +334,18 @@ function PptxPreview(props: { path: string }) {
         </Button>
       </div>
       <div class="flex-1 overflow-hidden">
-        <Show when={loading()}>
+        <Show when={state.loading}>
           <div class="flex items-center justify-center h-full">
             <div class="text-14-regular text-text-weak">{language.t("common.loading")}...</div>
           </div>
         </Show>
-        <Show when={error()}>
+        <Show when={state.error}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-14-regular text-text-weak">{error()}</div>
+            <div class="text-14-regular text-text-weak">{state.error}</div>
           </div>
         </Show>
-        <Show when={pdfUrl()}>
-          <iframe src={pdfUrl()} class="w-full h-full border-0 pdf-preview" />
+        <Show when={state.url}>
+          <iframe src={state.url} class="w-full h-full border-0 pdf-preview" />
         </Show>
       </div>
     </div>
