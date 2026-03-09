@@ -1,4 +1,11 @@
 use std::path::PathBuf;
+use tokio::sync::Mutex;
+
+static LOCK: Mutex<()> = Mutex::const_new(());
+
+pub async fn acquire() -> tokio::sync::MutexGuard<'static, ()> {
+    LOCK.lock().await
+}
 
 pub fn find_libreoffice() -> Option<PathBuf> {
     let candidates = if cfg!(target_os = "windows") {

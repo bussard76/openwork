@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use tauri::AppHandle;
 
@@ -14,44 +14,12 @@ pub enum XlsxError {
     OutputNotFound,
 }
 
-/// Find LibreOffice executable on the system
-fn find_libreoffice() -> Option<PathBuf> {
-    // Try common locations
-    let candidates = if cfg!(target_os = "windows") {
-        vec![
-            PathBuf::from(r"C:\Program Files\LibreOffice\program\soffice.exe"),
-            PathBuf::from(r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"),
-        ]
-    } else if cfg!(target_os = "macos") {
-        vec![
-            PathBuf::from("/Applications/LibreOffice.app/Contents/MacOS/soffice"),
-            PathBuf::from("/usr/local/bin/soffice"),
-            PathBuf::from("/opt/homebrew/bin/soffice"),
-        ]
-    } else {
-        vec![
-            PathBuf::from("/usr/bin/soffice"),
-            PathBuf::from("/usr/local/bin/soffice"),
-        ]
-    };
-
-    // Check candidates
-    for path in candidates {
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
-    // Try PATH
-    which::which("soffice").ok()
-}
-
 /// Convert XLSX to HTML using LibreOffice headless
 pub async fn convert_xlsx_to_html(
     _app: &AppHandle,
     input_path: &str,
 ) -> Result<String, XlsxError> {
-    let soffice_path = find_libreoffice().ok_or(XlsxError::LibreOfficeNotFound)?;
+    let soffice_path = crate::libreoffice::find_libreoffice().ok_or(XlsxError::LibreOfficeNotFound)?;
 
     let input = Path::new(input_path);
     if !input.exists() {
@@ -73,6 +41,7 @@ pub async fn convert_xlsx_to_html(
     );
 
     // Run LibreOffice conversion
+    let _lock = crate::libreoffice::acquire().await;
     let output = Command::new(&soffice_path)
         .arg("--headless")
         .arg("--convert-to")

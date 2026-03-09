@@ -18,6 +18,7 @@ import { useLanguage } from "@/context/language"
 import { usePrompt } from "@/context/prompt"
 import { getSessionHandoff } from "@/pages/session/handoff"
 import { usePlatform } from "@/context/platform"
+import { useSDK } from "@/context/sdk"
 
 const formatCommentLabel = (range: SelectedLineRange) => {
   const start = Math.min(range.start, range.end)
@@ -26,55 +27,71 @@ const formatCommentLabel = (range: SelectedLineRange) => {
   return `lines ${start}-${end}`
 }
 
+const docxCache = new Map<string, string>()
+
+export function evictDocxCache(path: string) {
+  docxCache.delete(path)
+}
+
 function DocxPreview(props: { path: string }) {
   const platform = usePlatform()
+  const sdk = useSDK()
   const language = useLanguage()
-  const [loading, setLoading] = createSignal(true)
+  const [loading, setLoading] = createSignal(!docxCache.has(props.path))
   const [error, setError] = createSignal<string>()
   let containerRef: HTMLDivElement | undefined
 
-  createEffect(() => {
-    const loadDocx = async () => {
-      if (!containerRef) return
-      if (platform.platform !== "desktop") return
+  const reload = async () => {
+    if (!containerRef) return
+    if (platform.platform !== "desktop") return
 
-      try {
-        setLoading(true)
-        setError(undefined)
-
-        // Dynamic imports for desktop-only modules
-        const [docxPreview, tauriFs] = await Promise.all([
-          import("docx-preview"),
-          import("@tauri-apps/plugin-fs").catch(() => null),
-        ])
-
-        if (!tauriFs) {
-          throw new Error("File system plugin not available")
-        }
-
-        const fileData = await tauriFs.readFile(props.path)
-
-        // Clear container
-        containerRef.innerHTML = ""
-
-        // Render DOCX
-        await docxPreview.renderAsync(fileData.buffer, containerRef, undefined, {
-          className: "docx-preview",
-          inWrapper: true,
-          ignoreWidth: false,
-          ignoreHeight: false,
-        })
-
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to load DOCX:", err)
-        setError(err instanceof Error ? err.message : "Failed to load document")
-        setLoading(false)
-      }
+    const cached = docxCache.get(props.path)
+    if (cached) {
+      containerRef.innerHTML = cached
+      return
     }
 
-    loadDocx()
+    try {
+      setLoading(true)
+      setError(undefined)
+
+      const [docxPreview, tauriFs] = await Promise.all([
+        import("docx-preview"),
+        import("@tauri-apps/plugin-fs").catch(() => null),
+      ])
+
+      if (!tauriFs) throw new Error("File system plugin not available")
+
+      const fileData = await tauriFs.readFile(props.path)
+      containerRef.innerHTML = ""
+
+      await docxPreview.renderAsync(fileData.buffer, containerRef, undefined, {
+        className: "docx-preview",
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+      })
+
+      docxCache.set(props.path, containerRef.innerHTML)
+      setLoading(false)
+    } catch (err) {
+      console.error("Failed to load DOCX:", err)
+      setError(err instanceof Error ? err.message : "Failed to load document")
+      setLoading(false)
+    }
+  }
+
+  createEffect(() => {
+    reload()
   })
+
+  onCleanup(
+    sdk.event.on("file.watcher.updated", (e) => {
+      if (!props.path.endsWith(e.properties.file)) return
+      docxCache.delete(props.path)
+      reload()
+    }),
+  )
 
   const handleOpenInWord = async () => {
     if (platform.platform !== "desktop") return
@@ -116,40 +133,58 @@ function DocxPreview(props: { path: string }) {
   )
 }
 
+const xlsxCache = new Map<string, string>()
+
+export function evictXlsxCache(path: string) {
+  xlsxCache.delete(path)
+}
+
 function XlsxPreview(props: { path: string }) {
   const platform = usePlatform()
+  const sdk = useSDK()
   const language = useLanguage()
-  const [loading, setLoading] = createSignal(true)
+  const [loading, setLoading] = createSignal(!xlsxCache.has(props.path))
   const [error, setError] = createSignal<string>()
-  const [htmlContent, setHtmlContent] = createSignal<string>()
+  const [htmlContent, setHtmlContent] = createSignal<string>(xlsxCache.get(props.path) ?? "")
 
-  createEffect(() => {
-    const loadXlsx = async () => {
-      if (platform.platform !== "desktop") return
-
-      try {
-        setLoading(true)
-        setError(undefined)
-
-        // Check if we're in desktop environment
-        if (typeof window === "undefined" || !(window as any).__TAURI__) {
-          throw new Error("Desktop environment not available")
-        }
-
-        // Call Tauri invoke directly
-        const { invoke } = (window as any).__TAURI__.core
-        const html = await invoke("convert_xlsx_to_html_command", { path: props.path })
-        setHtmlContent(html)
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to load XLSX:", err)
-        setError(err instanceof Error ? err.message : "Failed to load spreadsheet")
-        setLoading(false)
-      }
+  const reload = async () => {
+    if (platform.platform !== "desktop") return
+    if (xlsxCache.has(props.path)) {
+      setHtmlContent(xlsxCache.get(props.path)!)
+      return
     }
 
-    loadXlsx()
+    try {
+      setLoading(true)
+      setError(undefined)
+
+      if (typeof window === "undefined" || !(window as any).__TAURI__) {
+        throw new Error("Desktop environment not available")
+      }
+
+      const { invoke } = (window as any).__TAURI__.core
+      const html = await invoke("convert_xlsx_to_html_command", { path: props.path })
+      xlsxCache.set(props.path, html)
+      setHtmlContent(html)
+      setLoading(false)
+    } catch (err) {
+      console.error("Failed to load XLSX:", err)
+      setError(err instanceof Error ? err.message : "Failed to load spreadsheet")
+      setLoading(false)
+    }
+  }
+
+  createEffect(() => {
+    reload()
   })
+
+  onCleanup(
+    sdk.event.on("file.watcher.updated", (e) => {
+      if (!props.path.endsWith(e.properties.file)) return
+      xlsxCache.delete(props.path)
+      reload()
+    }),
+  )
 
   const handleOpenInExcel = async () => {
     if (platform.platform !== "desktop") return
@@ -278,42 +313,59 @@ function PdfPreview(props: { path: string }) {
   )
 }
 
+const pptxCache = new Map<string, string>()
+
+export function evictPptxCache(path: string) {
+  const url = pptxCache.get(path)
+  if (url) URL.revokeObjectURL(url)
+  pptxCache.delete(path)
+}
+
 function PptxPreview(props: { path: string }) {
   const platform = usePlatform()
+  const sdk = useSDK()
   const language = useLanguage()
   const [state, setState] = createStore<{ loading: boolean; error?: string; url?: string }>({
-    loading: true,
+    loading: !pptxCache.has(props.path),
+    url: pptxCache.get(props.path),
   })
 
-  createEffect(() => {
-    const path = props.path
-
-    const load = async () => {
-      if (platform.platform !== "desktop") return
-
-      try {
-        setState("loading", true)
-        setState("error", undefined)
-
-        const bytes = await platform.convertPptxToPdf?.(path)
-        if (!bytes) throw new Error("Conversion returned no data")
-        const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" })
-        setState("url", URL.createObjectURL(blob))
-        setState("loading", false)
-      } catch (err) {
-        console.error("Failed to load PPTX:", err)
-        setState("error", err instanceof Error ? err.message : "Failed to load presentation")
-        setState("loading", false)
-      }
+  const reload = async () => {
+    if (platform.platform !== "desktop") return
+    if (pptxCache.has(props.path)) {
+      setState("url", pptxCache.get(props.path))
+      return
     }
 
-    load()
+    try {
+      setState("loading", true)
+      setState("error", undefined)
+
+      const bytes = await platform.convertPptxToPdf?.(props.path)
+      if (!bytes) throw new Error("Conversion returned no data")
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" })
+      const url = URL.createObjectURL(blob)
+      pptxCache.set(props.path, url)
+      setState("url", url)
+      setState("loading", false)
+    } catch (err) {
+      console.error("Failed to load PPTX:", err)
+      setState("error", err instanceof Error ? err.message : "Failed to load presentation")
+      setState("loading", false)
+    }
+  }
+
+  createEffect(() => {
+    reload()
   })
 
-  onCleanup(() => {
-    const url = state.url
-    if (url) URL.revokeObjectURL(url)
-  })
+  onCleanup(
+    sdk.event.on("file.watcher.updated", (e) => {
+      if (!props.path.endsWith(e.properties.file)) return
+      evictPptxCache(props.path)
+      reload()
+    }),
+  )
 
   const handleOpen = async () => {
     if (platform.platform !== "desktop") return

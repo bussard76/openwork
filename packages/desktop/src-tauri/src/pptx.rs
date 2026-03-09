@@ -30,6 +30,7 @@ pub async fn convert_pptx_to_pdf(_app: &AppHandle, input_path: &str) -> Result<V
 
     tracing::info!(?input_path, ?tmp, ?soffice, "Converting PPTX to PDF");
 
+    let _lock = crate::libreoffice::acquire().await;
     let out = Command::new(&soffice)
         .arg("--headless")
         .arg("--convert-to")

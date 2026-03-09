@@ -23,7 +23,7 @@ import { useLayout } from "@/context/layout"
 import { useSync } from "@/context/sync"
 import { decode64 } from "@/utils/base64"
 import { createFileTabListSync } from "@/pages/session/file-tab-scroll"
-import { FileTabContent } from "@/pages/session/file-tabs"
+import { FileTabContent, evictPptxCache, evictXlsxCache, evictDocxCache } from "@/pages/session/file-tabs"
 import { createOpenSessionFileTab, getTabReorderIndex } from "@/pages/session/helpers"
 import { StickyAddButton } from "@/pages/session/review-tab"
 import { setSessionHandoff } from "@/pages/session/handoff"
@@ -155,6 +155,7 @@ export function SessionSidePanel(props: {
       (active.startsWith("docx://") ||
         active.startsWith("xlsx://") ||
         active.startsWith("pdf://") ||
+        active.startsWith("pptx://") ||
         file.pathFromTab(active))
     )
       return normalizeTab(active)
@@ -298,7 +299,19 @@ export function SessionSidePanel(props: {
                           </Tabs.Trigger>
                         </Show>
                         <SortableProvider ids={openedTabs()}>
-                          <For each={openedTabs()}>{(tab) => <SortableTab tab={tab} onTabClose={tabs().close} />}</For>
+                          <For each={openedTabs()}>
+                            {(tab) => (
+                              <SortableTab
+                                tab={tab}
+                                onTabClose={(t) => {
+                                  if (t.startsWith("pptx://")) evictPptxCache(t.slice("pptx://".length))
+                                  if (t.startsWith("xlsx://")) evictXlsxCache(t.slice("xlsx://".length))
+                                  if (t.startsWith("docx://")) evictDocxCache(t.slice("docx://".length))
+                                  tabs().close(t)
+                                }}
+                              />
+                            )}
+                          </For>
                         </SortableProvider>
                         <StickyAddButton>
                           <TooltipKeybind

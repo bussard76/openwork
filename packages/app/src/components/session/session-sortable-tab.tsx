@@ -43,6 +43,9 @@ export function SortableTab(props: { tab: string; onTabClose: (tab: string) => v
     if (props.tab.startsWith("pdf://")) {
       return props.tab.slice("pdf://".length)
     }
+    if (props.tab.startsWith("pptx://")) {
+      return props.tab.slice("pptx://".length)
+    }
     return file.pathFromTab(props.tab)
   })
   const content = createMemo(() => {
