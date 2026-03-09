@@ -368,6 +368,8 @@ const createPlatform = (): Platform => {
 
     parseMarkdown: (markdown: string) => commands.parseMarkdownCommand(markdown),
 
+    convertPptxToPdf: (path) => commands.convertPptxToPdfCommand(path),
+
     webviewZoom,
 
     checkAppExists: async (appName: string) => {

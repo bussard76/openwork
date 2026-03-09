@@ -78,6 +78,9 @@ export type Platform = {
   /** Parse markdown to HTML using native parser (desktop only, returns unprocessed code blocks) */
   parseMarkdown?(markdown: string): Promise<string>
 
+  /** Convert a PPTX file to PDF bytes (desktop only) */
+  convertPptxToPdf?(path: string): Promise<number[]>
+
   /** Webview zoom level (desktop only) */
   webviewZoom?: Accessor<number>
 
