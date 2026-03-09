@@ -10,6 +10,8 @@ mod os;
 mod server;
 mod window_customizer;
 mod windows;
+mod libreoffice;
+mod pptx;
 mod xlsx;
 
 use crate::cli::CommandChild;
@@ -406,7 +408,8 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             wsl_path,
             resolve_app_path,
             open_path,
-            xlsx::convert_xlsx_to_html_command
+            xlsx::convert_xlsx_to_html_command,
+            pptx::convert_pptx_to_pdf_command
         ])
         .events(tauri_specta::collect_events![
             LoadingWindowComplete,
