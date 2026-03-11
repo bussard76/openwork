@@ -7,38 +7,35 @@
     </picture>
   </a>
 </p>
-<p align="center">The open source AI coding agent.</p>
+<p align="center"><strong>OpenWork</strong> — your AI work client for the everyday office worker.</p>
+<p align="center">
+  Built on <a href="https://opencode.ai">OpenCode</a>, OpenWork gives non-technical users a seamless experience to:<br>
+  work with <strong>MS Office files</strong> (Word, Excel, PowerPoint) · chat against <strong>live internet knowledge</strong> · use <strong>MCPs</strong> and <strong>Skills</strong> without any setup friction.
+</p>
+<p align="center">Think of it as Claude for Work — but open source, provider-agnostic, and fully customizable.</p>
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
   <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
-<p align="center">
-  <a href="README.md">English</a> |
-  <a href="README.zh.md">简体中文</a> |
-  <a href="README.zht.md">繁體中文</a> |
-  <a href="README.ko.md">한국어</a> |
-  <a href="README.de.md">Deutsch</a> |
-  <a href="README.es.md">Español</a> |
-  <a href="README.fr.md">Français</a> |
-  <a href="README.it.md">Italiano</a> |
-  <a href="README.da.md">Dansk</a> |
-  <a href="README.ja.md">日本語</a> |
-  <a href="README.pl.md">Polski</a> |
-  <a href="README.ru.md">Русский</a> |
-  <a href="README.bs.md">Bosanski</a> |
-  <a href="README.ar.md">العربية</a> |
-  <a href="README.no.md">Norsk</a> |
-  <a href="README.br.md">Português (Brasil)</a> |
-  <a href="README.th.md">ไทย</a> |
-  <a href="README.tr.md">Türkçe</a> |
-  <a href="README.uk.md">Українська</a> |
-  <a href="README.bn.md">বাংলা</a> |
-  <a href="README.gr.md">Ελληνικά</a>
-</p>
+[![OpenWork Screenshot](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
 
-[![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+---
+
+### What is OpenWork?
+
+OpenWork is an AI work client for everyday office workers — built on the open-source [OpenCode](https://opencode.ai) engine.
+
+Where OpenCode targets developers in the terminal, OpenWork targets anyone who works with documents, spreadsheets, and presentations. It provides a polished desktop interface that lets you:
+
+- **Open and work with MS Office files** — Word (`.docx`), Excel (`.xlsx`), PowerPoint (`.pptx`) directly in the client
+- **Chat with internet knowledge** — built-in web search keeps answers current
+- **Use MCPs seamlessly** — connect any Model Context Protocol server without configuration friction
+- **Apply Skills** — reusable AI workflows that automate repetitive office tasks
+- **Stay provider-agnostic** — works with Claude, OpenAI, Google, or local models
+
+> Think of it as a self-hosted, open-source alternative to Claude for Work — customizable by your team and deployable on your own infrastructure.
 
 ---
 
@@ -125,15 +122,20 @@ If you are working on a project that's related to OpenCode and is using "opencod
 
 ### FAQ
 
-#### How is this different from Claude Code?
+#### How is OpenWork different from Claude for Work (Claude.ai Teams)?
 
-It's very similar to Claude Code in terms of capability. Here are the key differences:
+OpenWork is inspired by the user experience of Claude for Work, but built on the open-source OpenCode engine. Key differences:
 
-- 100% open source
-- Not coupled to any provider. Although we recommend the models we provide through [OpenCode Zen](https://opencode.ai/zen), OpenCode can be used with Claude, OpenAI, Google, or even local models. As models evolve, the gaps between them will close and pricing will drop, so being provider-agnostic is important.
-- Out-of-the-box LSP support
-- A focus on TUI. OpenCode is built by neovim users and the creators of [terminal.shop](https://terminal.shop); we are going to push the limits of what's possible in the terminal.
-- A client/server architecture. This, for example, can allow OpenCode to run on your computer while you drive it remotely from a mobile app, meaning that the TUI frontend is just one of the possible clients.
+- **Open source** — fully inspectable and self-hostable
+- **Provider-agnostic** — works with Claude, OpenAI, Google, or local models; not locked to Anthropic
+- **MS Office integration** — open, preview, and work with Word, Excel, and PowerPoint files directly in the client
+- **MCP & Skills support** — connect any MCP server or define reusable Skills without IT involvement
+- **Internet-grounded chat** — built-in web search so answers are current, not cut off at a training date
+- **Desktop app** — native experience via Tauri, available for macOS, Windows, and Linux
+
+#### How is OpenWork different from OpenCode (the upstream project)?
+
+OpenCode is a developer tool (AI coding agent). OpenWork takes the same engine and shapes it for **everyday office workers** — no terminal, no code, no friction. The target user is someone who works with documents, spreadsheets, and presentations and wants AI that just works.
 
 ---
 
