@@ -580,6 +580,8 @@ export const dict = {
   "sidebar.project.recentSessions": "最近会话",
   "sidebar.project.viewAllSessions": "查看全部会话",
   "sidebar.project.clearNotifications": "清除通知",
+  "sidebar.pin": "固定侧边栏",
+  "sidebar.unpin": "取消固定侧边栏",
 
   "app.name.desktop": "OpenCode Desktop",
 

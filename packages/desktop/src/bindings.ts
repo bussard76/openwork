@@ -19,6 +19,8 @@ export const commands = {
 	wslPath: (path: string, mode: "windows" | "linux" | null) => __TAURI_INVOKE<string>("wsl_path", { path, mode }),
 	resolveAppPath: (appName: string) => __TAURI_INVOKE<string | null>("resolve_app_path", { appName }),
 	openPath: (path: string, appName: string | null) => __TAURI_INVOKE<null>("open_path", { path, appName }),
+	convertXlsxToHtmlCommand: (path: string) => __TAURI_INVOKE<string>("convert_xlsx_to_html_command", { path }),
+	convertPptxToPdfCommand: (path: string) => __TAURI_INVOKE<number[]>("convert_pptx_to_pdf_command", { path }),
 };
 
 /** Events */

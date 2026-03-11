@@ -586,6 +586,8 @@ export const dict = {
   "sidebar.project.recentSessions": "Nedavne sesije",
   "sidebar.project.viewAllSessions": "Prikaži sve sesije",
   "sidebar.project.clearNotifications": "Očisti obavijesti",
+  "sidebar.pin": "Zakači bočnu traku",
+  "sidebar.unpin": "Otkači bočnu traku",
 
   "app.name.desktop": "OpenCode Desktop",
 

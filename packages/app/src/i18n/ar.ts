@@ -519,6 +519,8 @@ export const dict = {
   "sidebar.project.recentSessions": "الجلسات الحديثة",
   "sidebar.project.viewAllSessions": "عرض جميع الجلسات",
   "sidebar.project.clearNotifications": "مسح الإشعارات",
+  "sidebar.pin": "تثبيت الشريط الجانبي",
+  "sidebar.unpin": "إلغاء تثبيت الشريط الجانبي",
   "app.name.desktop": "OpenCode Desktop",
   "settings.section.desktop": "سطح المكتب",
   "settings.section.server": "الخادم",

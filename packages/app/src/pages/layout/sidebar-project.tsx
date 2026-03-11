@@ -63,6 +63,7 @@ const ProjectTile = (props: {
   overlay: Accessor<boolean>
   suppressHover: Accessor<boolean>
   dirs: Accessor<string[]>
+  expanded?: Accessor<boolean>
   onProjectMouseEnter: (worktree: string, event: MouseEvent) => void
   onProjectMouseLeave: (worktree: string) => void
   onProjectFocus: (worktree: string) => void
@@ -103,7 +104,9 @@ const ProjectTile = (props: {
         data-action="project-switch"
         data-project={base64Encode(props.project.worktree)}
         classList={{
-          "flex items-center justify-center size-10 p-1 rounded-lg overflow-hidden transition-colors cursor-default": true,
+          "flex items-center gap-2 p-1 rounded-lg overflow-hidden transition-colors cursor-default w-full": true,
+          "justify-center": !props.expanded?.(),
+          "justify-start": !!props.expanded?.(),
           "bg-transparent border-2 border-icon-strong-base hover:bg-surface-base-hover": props.selected(),
           "bg-transparent border border-transparent hover:bg-surface-base-hover hover:border-border-weak-base":
             !props.selected() && !props.active(),
@@ -136,6 +139,9 @@ const ProjectTile = (props: {
         onBlur={() => props.setOpen(false)}
       >
         <ProjectIcon project={props.project} notify />
+        <Show when={props.expanded?.()}>
+          <span class="text-13-medium text-text-base truncate">{displayName(props.project)}</span>
+        </Show>
       </ContextMenu.Trigger>
       <ContextMenu.Portal mount={!props.mobile ? props.nav() : undefined}>
         <ContextMenu.Content>
@@ -283,6 +289,7 @@ export const SortableProject = (props: {
   mobile?: boolean
   ctx: ProjectSidebarContext
   sortNow: Accessor<number>
+  expanded?: Accessor<boolean>
 }): JSX.Element => {
   const globalSync = useGlobalSync()
   const language = useLanguage()
@@ -354,6 +361,7 @@ export const SortableProject = (props: {
       overlay={overlay}
       suppressHover={() => state.suppressHover}
       dirs={dirs}
+      expanded={props.expanded}
       onProjectMouseEnter={props.ctx.onProjectMouseEnter}
       onProjectMouseLeave={props.ctx.onProjectMouseLeave}
       onProjectFocus={props.ctx.onProjectFocus}

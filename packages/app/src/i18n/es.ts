@@ -589,6 +589,8 @@ export const dict = {
   "sidebar.project.recentSessions": "Sesiones recientes",
   "sidebar.project.viewAllSessions": "Ver todas las sesiones",
   "sidebar.project.clearNotifications": "Borrar notificaciones",
+  "sidebar.pin": "Fijar barra lateral",
+  "sidebar.unpin": "Desfijar barra lateral",
 
   "app.name.desktop": "OpenCode Desktop",
 

@@ -581,6 +581,8 @@ export const dict = {
   "sidebar.project.recentSessions": "เซสชันล่าสุด",
   "sidebar.project.viewAllSessions": "ดูเซสชันทั้งหมด",
   "sidebar.project.clearNotifications": "ล้างการแจ้งเตือน",
+  "sidebar.pin": "ปักหมุดแถบด้านข้าง",
+  "sidebar.unpin": "เลิกปักหมุดแถบด้านข้าง",
 
   "app.name.desktop": "OpenCode Desktop",
 

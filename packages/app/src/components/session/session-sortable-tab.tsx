@@ -32,7 +32,22 @@ export function SortableTab(props: { tab: string; onTabClose: (tab: string) => v
   const language = useLanguage()
   const command = useCommand()
   const sortable = createSortable(props.tab)
-  const path = createMemo(() => file.pathFromTab(props.tab))
+  const path = createMemo(() => {
+    // Handle docx://, xlsx://, and pdf:// tabs
+    if (props.tab.startsWith("docx://")) {
+      return props.tab.slice("docx://".length)
+    }
+    if (props.tab.startsWith("xlsx://")) {
+      return props.tab.slice("xlsx://".length)
+    }
+    if (props.tab.startsWith("pdf://")) {
+      return props.tab.slice("pdf://".length)
+    }
+    if (props.tab.startsWith("pptx://")) {
+      return props.tab.slice("pptx://".length)
+    }
+    return file.pathFromTab(props.tab)
+  })
   const content = createMemo(() => {
     const value = path()
     if (!value) return

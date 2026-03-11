@@ -16,6 +16,8 @@ const AVATAR_COLOR_KEYS = ["pink", "mint", "orange", "purple", "cyan", "lime"] a
 const DEFAULT_PANEL_WIDTH = 344
 const DEFAULT_SESSION_WIDTH = 600
 const DEFAULT_TERMINAL_HEIGHT = 280
+const DEFAULT_PROJECT_COLUMN_WIDTH = 180
+const DEFAULT_PROJECT_LIST_HEIGHT = 240
 export type AvatarColorKey = (typeof AVATAR_COLOR_KEYS)[number]
 
 export function getAvatarColors(key?: string) {
@@ -233,6 +235,11 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           width: DEFAULT_PANEL_WIDTH,
           workspaces: {} as Record<string, boolean>,
           workspacesDefault: false,
+        },
+        projectColumn: {
+          width: DEFAULT_PROJECT_COLUMN_WIDTH,
+          listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+          listCollapsed: false,
         },
         terminal: {
           height: DEFAULT_TERMINAL_HEIGHT,
@@ -608,6 +615,58 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         toggleWorkspaces(directory: string) {
           const current = store.sidebar.workspaces[directory] ?? store.sidebar.workspacesDefault ?? false
           setStore("sidebar", "workspaces", directory, !current)
+        },
+      },
+      projectColumn: {
+        width: createMemo(() => store.projectColumn?.width ?? DEFAULT_PROJECT_COLUMN_WIDTH),
+        resize(width: number) {
+          if (!store.projectColumn) {
+            setStore("projectColumn", { width, listHeight: DEFAULT_PROJECT_LIST_HEIGHT, listCollapsed: false })
+            return
+          }
+          setStore("projectColumn", "width", width)
+        },
+        listHeight: createMemo(() => store.projectColumn?.listHeight ?? DEFAULT_PROJECT_LIST_HEIGHT),
+        resizeList(height: number) {
+          if (!store.projectColumn) {
+            setStore("projectColumn", { width: DEFAULT_PROJECT_COLUMN_WIDTH, listHeight: height, listCollapsed: false })
+            return
+          }
+          setStore("projectColumn", "listHeight", height)
+        },
+        listCollapsed: createMemo(() => store.projectColumn?.listCollapsed ?? false),
+        collapseList() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: true,
+            })
+            return
+          }
+          setStore("projectColumn", "listCollapsed", true)
+        },
+        expandList() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: false,
+            })
+            return
+          }
+          setStore("projectColumn", "listCollapsed", false)
+        },
+        toggleList() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: true,
+            })
+            return
+          }
+          setStore("projectColumn", "listCollapsed", (x) => !x)
         },
       },
       terminal: {
