@@ -119,6 +119,27 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
+      - name: Ad-hoc sign macOS app
+        if: runner.os == 'macOS'
+        run: |
+          APP="packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/macos/OpenWork.app"
+          codesign --deep --force --sign - "$APP"
+
+      - name: Repackage DMG with signed app
+        if: runner.os == 'macOS'
+        run: |
+          TARGET=${{ matrix.settings.target }}
+          BUNDLE="packages/desktop/src-tauri/target/${TARGET}/release/bundle"
+          DMG=$(find "$BUNDLE/dmg" -name "*.dmg" | head -1)
+          APP="$BUNDLE/macos/OpenWork.app"
+          TMP=$(mktemp -d)
+          cp -r "$APP" "$TMP/"
+          NEW_DMG="${DMG%.dmg}-signed.dmg"
+          hdiutil create -volname "OpenWork" -srcfolder "$TMP" -ov -format UDZO "$NEW_DMG"
+          rm "$DMG"
+          mv "$NEW_DMG" "$DMG"
+          rm -rf "$TMP"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
