@@ -49,12 +49,15 @@ jobs:
           - host: macos-latest
             target: aarch64-apple-darwin
             name: macOS-arm64
+            cli: opencode-darwin-arm64
           - host: macos-latest
             target: x86_64-apple-darwin
             name: macOS-x64
+            cli: opencode-darwin-x64
           - host: windows-latest
             target: x86_64-pc-windows-msvc
             name: Windows-x64
+            cli: opencode-windows-x64
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +91,8 @@ jobs:
         run: |
           mkdir -p packages/desktop/src-tauri/sidecars
           TARGET=${{ matrix.settings.target }}
-          SRC="packages/desktop/src-tauri/target/opencode-binaries/opencode-cli/bin/opencode"
+          CLI=${{ matrix.settings.cli }}
+          SRC="packages/desktop/src-tauri/target/opencode-binaries/opencode-cli/${CLI}/bin/opencode"
           DEST="packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}"
           cp "$SRC" "$DEST"
           chmod +x "$DEST"
@@ -99,7 +103,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path packages/desktop/src-tauri/sidecars
           $TARGET = "${{ matrix.settings.target }}"
-          $SRC = "packages/desktop/src-tauri/target/opencode-binaries/opencode-cli/bin/opencode.exe"
+          $CLI = "${{ matrix.settings.cli }}"
+          $SRC = "packages/desktop/src-tauri/target/opencode-binaries/opencode-cli/${CLI}/bin/opencode.exe"
           $DEST = "packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}.exe"
           Copy-Item $SRC $DEST
 
