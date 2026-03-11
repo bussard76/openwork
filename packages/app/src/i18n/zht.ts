@@ -577,6 +577,8 @@ export const dict = {
   "sidebar.project.recentSessions": "最近工作階段",
   "sidebar.project.viewAllSessions": "查看全部工作階段",
   "sidebar.project.clearNotifications": "清除通知",
+  "sidebar.pin": "固定側邊欄",
+  "sidebar.unpin": "取消固定側邊欄",
 
   "app.name.desktop": "OpenCode Desktop",
   "settings.section.desktop": "桌面",

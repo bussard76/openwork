@@ -1844,7 +1844,11 @@ export default function Layout(props: ParentProps) {
           "flex flex-col min-h-0 bg-background-stronger border border-b-0 border-border-weak-base rounded-tl-[12px]": true,
           "flex-1 min-w-0": panelProps.mobile,
         }}
-        style={{ width: panelProps.mobile ? undefined : `${Math.max(layout.sidebar.width() - 64, 0)}px` }}
+        style={{
+          width: panelProps.mobile
+            ? undefined
+            : `${Math.max(layout.sidebar.width() - layout.projectColumn.width(), 0)}px`,
+        }}
       >
         <Show when={panelProps.project}>
           {(p) => (
@@ -1877,57 +1881,74 @@ export default function Layout(props: ParentProps) {
                     </Tooltip>
                   </div>
 
-                  <DropdownMenu modal={!sidebarHovering()}>
-                    <DropdownMenu.Trigger
-                      as={IconButton}
-                      icon="dot-grid"
-                      variant="ghost"
-                      data-action="project-menu"
-                      data-project={base64Encode(p().worktree)}
-                      class="shrink-0 size-6 rounded-md data-[expanded]:bg-surface-base-active"
-                      classList={{
-                        "opacity-0 group-hover/project:opacity-100 data-[expanded]:opacity-100": !panelProps.mobile,
-                      }}
-                      aria-label={language.t("common.moreOptions")}
-                    />
-                    <DropdownMenu.Portal mount={!panelProps.mobile ? state.nav : undefined}>
-                      <DropdownMenu.Content class="mt-1">
-                        <DropdownMenu.Item onSelect={() => showEditProjectDialog(p())}>
-                          <DropdownMenu.ItemLabel>{language.t("common.edit")}</DropdownMenu.ItemLabel>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                          data-action="project-workspaces-toggle"
-                          data-project={base64Encode(p().worktree)}
-                          disabled={p().vcs !== "git" && !layout.sidebar.workspaces(p().worktree)()}
-                          onSelect={() => toggleProjectWorkspaces(p())}
-                        >
-                          <DropdownMenu.ItemLabel>
-                            {layout.sidebar.workspaces(p().worktree)()
-                              ? language.t("sidebar.workspaces.disable")
-                              : language.t("sidebar.workspaces.enable")}
-                          </DropdownMenu.ItemLabel>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                          data-action="project-clear-notifications"
-                          data-project={base64Encode(p().worktree)}
-                          disabled={unseenCount() === 0}
-                          onSelect={clearNotifications}
-                        >
-                          <DropdownMenu.ItemLabel>
-                            {language.t("sidebar.project.clearNotifications")}
-                          </DropdownMenu.ItemLabel>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Separator />
-                        <DropdownMenu.Item
-                          data-action="project-close-menu"
-                          data-project={base64Encode(p().worktree)}
-                          onSelect={() => closeProject(p().worktree)}
-                        >
-                          <DropdownMenu.ItemLabel>{language.t("common.close")}</DropdownMenu.ItemLabel>
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu>
+                  <div class="flex items-center gap-1">
+                    <Show when={!panelProps.mobile && !sidebarHovering()}>
+                      <Tooltip
+                        placement="bottom"
+                        gutter={4}
+                        value={layout.sidebar.opened() ? language.t("sidebar.unpin") : language.t("sidebar.pin")}
+                      >
+                        <IconButton
+                          icon={layout.sidebar.opened() ? "layout-left-full" : "layout-left-partial"}
+                          variant="ghost"
+                          class="shrink-0 size-6 rounded-md opacity-0 group-hover/project:opacity-100"
+                          aria-label={layout.sidebar.opened() ? language.t("sidebar.unpin") : language.t("sidebar.pin")}
+                          onClick={() => layout.sidebar.toggle()}
+                        />
+                      </Tooltip>
+                    </Show>
+                    <DropdownMenu modal={!sidebarHovering()}>
+                      <DropdownMenu.Trigger
+                        as={IconButton}
+                        icon="dot-grid"
+                        variant="ghost"
+                        data-action="project-menu"
+                        data-project={base64Encode(p().worktree)}
+                        class="shrink-0 size-6 rounded-md data-[expanded]:bg-surface-base-active"
+                        classList={{
+                          "opacity-0 group-hover/project:opacity-100 data-[expanded]:opacity-100": !panelProps.mobile,
+                        }}
+                        aria-label={language.t("common.moreOptions")}
+                      />
+                      <DropdownMenu.Portal mount={!panelProps.mobile ? state.nav : undefined}>
+                        <DropdownMenu.Content class="mt-1">
+                          <DropdownMenu.Item onSelect={() => showEditProjectDialog(p())}>
+                            <DropdownMenu.ItemLabel>{language.t("common.edit")}</DropdownMenu.ItemLabel>
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            data-action="project-workspaces-toggle"
+                            data-project={base64Encode(p().worktree)}
+                            disabled={p().vcs !== "git" && !layout.sidebar.workspaces(p().worktree)()}
+                            onSelect={() => toggleProjectWorkspaces(p())}
+                          >
+                            <DropdownMenu.ItemLabel>
+                              {layout.sidebar.workspaces(p().worktree)()
+                                ? language.t("sidebar.workspaces.disable")
+                                : language.t("sidebar.workspaces.enable")}
+                            </DropdownMenu.ItemLabel>
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            data-action="project-clear-notifications"
+                            data-project={base64Encode(p().worktree)}
+                            disabled={unseenCount() === 0}
+                            onSelect={clearNotifications}
+                          >
+                            <DropdownMenu.ItemLabel>
+                              {language.t("sidebar.project.clearNotifications")}
+                            </DropdownMenu.ItemLabel>
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator />
+                          <DropdownMenu.Item
+                            data-action="project-close-menu"
+                            data-project={base64Encode(p().worktree)}
+                            onSelect={() => closeProject(p().worktree)}
+                          >
+                            <DropdownMenu.ItemLabel>{language.t("common.close")}</DropdownMenu.ItemLabel>
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
 
@@ -2057,7 +2078,15 @@ export default function Layout(props: ParentProps) {
             "hidden xl:block": true,
             "relative shrink-0": true,
           }}
-          style={{ width: layout.sidebar.opened() ? `${Math.max(layout.sidebar.width(), 244)}px` : "64px" }}
+          style={{
+            width: (() => {
+              const proj = layout.projectColumn.width()
+              if (layout.sidebar.opened()) {
+                return `${Math.max(layout.sidebar.width(), proj + 180)}px`
+              }
+              return `${proj}px`
+            })(),
+          }}
           ref={(el) => {
             setState("nav", el)
           }}
@@ -2084,7 +2113,12 @@ export default function Layout(props: ParentProps) {
               aimMove={aim.move}
               projects={() => layout.projects.list()}
               renderProject={(project) => (
-                <SortableProject ctx={projectSidebarCtx} project={project} sortNow={sortNow} />
+                <SortableProject
+                  ctx={projectSidebarCtx}
+                  project={project}
+                  sortNow={sortNow}
+                  expanded={() => layout.projectColumn.width() >= 120}
+                />
               )}
               handleDragStart={handleDragStart}
               handleDragEnd={handleDragEnd}
@@ -2100,6 +2134,14 @@ export default function Layout(props: ParentProps) {
               onOpenSettings={openSettings}
               helpLabel={() => language.t("sidebar.help")}
               onOpenHelp={() => platform.openLink("https://opencode.ai/desktop-feedback")}
+              projectColumnWidth={() => layout.projectColumn.width()}
+              onProjectColumnResize={layout.projectColumn.resize}
+              projectListHeight={() => layout.projectColumn.listHeight()}
+              onProjectListResize={layout.projectColumn.resizeList}
+              projectListCollapsed={() => layout.projectColumn.listCollapsed()}
+              onToggleProjectList={layout.projectColumn.toggleList}
+              fileTreeOpened={() => layout.fileTree.opened()}
+              onToggleFileTree={layout.fileTree.toggle}
               renderPanel={() => (
                 <Show when={currentProject()} keyed>
                   {(project) => <SidebarPanel project={project} />}
@@ -2109,8 +2151,19 @@ export default function Layout(props: ParentProps) {
           </div>
           <Show when={!layout.sidebar.opened() ? hoverProjectData()?.worktree : undefined} keyed>
             {(worktree) => (
-              <div class="absolute inset-y-0 left-16 z-50 flex" onMouseEnter={aim.reset}>
+              <div
+                class="absolute inset-y-0 z-50 flex"
+                style={{ left: `${layout.projectColumn.width()}px` }}
+                onMouseEnter={aim.reset}
+              >
                 <SidebarPanel project={hoverProjectData()} />
+                <ResizeHandle
+                  direction="horizontal"
+                  size={layout.sidebar.width()}
+                  min={layout.projectColumn.width() + 180}
+                  max={typeof window === "undefined" ? 1000 : window.innerWidth * 0.7}
+                  onResize={layout.sidebar.resize}
+                />
               </div>
             )}
           </Show>
@@ -2118,9 +2171,9 @@ export default function Layout(props: ParentProps) {
             <ResizeHandle
               direction="horizontal"
               size={layout.sidebar.width()}
-              min={244}
-              max={typeof window === "undefined" ? 1000 : window.innerWidth * 0.3 + 64}
-              collapseThreshold={244}
+              min={layout.projectColumn.width() + 180}
+              max={typeof window === "undefined" ? 1000 : window.innerWidth * 0.7}
+              collapseThreshold={layout.projectColumn.width() + 280}
               onResize={layout.sidebar.resize}
               onCollapse={layout.sidebar.close}
             />
@@ -2169,6 +2222,14 @@ export default function Layout(props: ParentProps) {
               onOpenSettings={openSettings}
               helpLabel={() => language.t("sidebar.help")}
               onOpenHelp={() => platform.openLink("https://opencode.ai/desktop-feedback")}
+              projectColumnWidth={() => 64}
+              onProjectColumnResize={() => {}}
+              projectListHeight={() => layout.projectColumn.listHeight()}
+              onProjectListResize={layout.projectColumn.resizeList}
+              projectListCollapsed={() => layout.projectColumn.listCollapsed()}
+              onToggleProjectList={layout.projectColumn.toggleList}
+              fileTreeOpened={() => layout.fileTree.opened()}
+              onToggleFileTree={layout.fileTree.toggle}
               renderPanel={() => <SidebarPanel project={currentProject()} mobile />}
             />
           </nav>

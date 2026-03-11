@@ -18,6 +18,12 @@ export interface SoundSettings {
   errors: string
 }
 
+export interface BrandingSettings {
+  companyName: string
+  logoUrl: string
+  accentColor: string
+}
+
 export interface Settings {
   general: {
     autoSave: boolean
@@ -39,6 +45,7 @@ export interface Settings {
   }
   notifications: NotificationSettings
   sounds: SoundSettings
+  branding: BrandingSettings
 }
 
 const defaultSettings: Settings = {
@@ -72,6 +79,11 @@ const defaultSettings: Settings = {
     permissions: "staplebops-02",
     errorsEnabled: true,
     errors: "nope-03",
+  },
+  branding: {
+    companyName: "",
+    logoUrl: "",
+    accentColor: "",
   },
 }
 
@@ -110,6 +122,13 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     createEffect(() => {
       if (typeof document === "undefined") return
       document.documentElement.style.setProperty("--font-family-mono", monoFontFamily(store.appearance?.font))
+    })
+
+    createEffect(() => {
+      if (typeof document === "undefined") return
+      const color = store.branding?.accentColor
+      if (color) document.documentElement.style.setProperty("--accent-base", color)
+      else document.documentElement.style.removeProperty("--accent-base")
     })
 
     return {
@@ -228,6 +247,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         errors: withFallback(() => store.sounds?.errors, defaultSettings.sounds.errors),
         setErrors(value: string) {
           setStore("sounds", "errors", value)
+        },
+      },
+      branding: {
+        companyName: withFallback(() => store.branding?.companyName, defaultSettings.branding.companyName),
+        setCompanyName(value: string) {
+          setStore("branding", "companyName", value)
+        },
+        logoUrl: withFallback(() => store.branding?.logoUrl, defaultSettings.branding.logoUrl),
+        setLogoUrl(value: string) {
+          setStore("branding", "logoUrl", value)
+        },
+        accentColor: withFallback(() => store.branding?.accentColor, defaultSettings.branding.accentColor),
+        setAccentColor(value: string) {
+          setStore("branding", "accentColor", value)
         },
       },
     }

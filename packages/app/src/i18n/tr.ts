@@ -595,6 +595,8 @@ export const dict = {
   "sidebar.project.recentSessions": "Son oturumlar",
   "sidebar.project.viewAllSessions": "Tüm oturumları görüntüle",
   "sidebar.project.clearNotifications": "Bildirimleri temizle",
+  "sidebar.pin": "Kenar çubuğunu sabitle",
+  "sidebar.unpin": "Kenar çubuğunu çöz",
 
   "app.name.desktop": "OpenCode Masaüstü",
 
