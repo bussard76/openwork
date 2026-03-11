@@ -127,19 +127,23 @@ jobs:
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.dmg
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.exe
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.msi
-            packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.app
           if-no-files-found: warn
 
   publish-release:
     needs: build-tauri
     runs-on: ubuntu-latest
     steps:
-      - name: Download all artifacts
+      - name: Download desktop artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: openwork-desktop-*
           path: release-artifacts
           merge-multiple: false
+
+      - name: Collect release files
+        run: |
+          mkdir -p dist
+          find release-artifacts -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" \) -exec cp {} dist/ \;
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -148,6 +152,6 @@ jobs:
           name: OpenWork v0.5.0
           draft: false
           prerelease: false
-          files: release-artifacts/**/*
+          files: dist/*
         env:
           GITHUB_TOKEN: ${{ github.token }}
