@@ -139,18 +139,49 @@ export function evictXlsxCache(path: string) {
   xlsxCache.delete(path)
 }
 
+function parseSheets(html: string): { name: string; content: string }[] {
+  // Extract sheet names from overview anchors: <A HREF="#tableN">SheetName</A>
+  const names: string[] = []
+  const nameRe = /<A HREF="#table\d+">(.*?)<\/A>/gi
+  let m
+  while ((m = nameRe.exec(html)) !== null) names.push(m[1])
+
+  if (names.length === 0) return [{ name: "Sheet1", content: html }]
+
+  // Split HTML into per-sheet sections by <A NAME="tableN"> anchors
+  const sections = html.split(/<A NAME="table\d+"/i)
+  // sections[0] is the overview/header, sections[1..] are the sheet bodies
+  const style = /<style[^>]*>[\s\S]*?<\/style>/i.exec(html)?.[0] ?? ""
+
+  return names.map((name, i) => {
+    const body = sections[i + 1] ?? ""
+    // Strip leading anchor tag close and trailing comment separators
+    const inner = body
+      .replace(/^[^>]*>/, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .trim()
+    return {
+      name,
+      content: `<style>body,div,table,thead,tbody,tfoot,tr,th,td,p{font-family:"Calibri";font-size:x-small}</style>${inner}`,
+    }
+  })
+}
+
 function XlsxPreview(props: { path: string }) {
   const platform = usePlatform()
   const sdk = useSDK()
   const language = useLanguage()
   const [loading, setLoading] = createSignal(!xlsxCache.has(props.path))
   const [error, setError] = createSignal<string>()
-  const [htmlContent, setHtmlContent] = createSignal<string>(xlsxCache.get(props.path) ?? "")
+  const [rawHtml, setRawHtml] = createSignal<string>(xlsxCache.get(props.path) ?? "")
+  const [activeSheet, setActiveSheet] = createSignal(0)
+
+  const sheets = createMemo(() => parseSheets(rawHtml()))
 
   const reload = async () => {
     if (platform.platform !== "desktop") return
     if (xlsxCache.has(props.path)) {
-      setHtmlContent(xlsxCache.get(props.path)!)
+      setRawHtml(xlsxCache.get(props.path)!)
       return
     }
 
@@ -165,7 +196,8 @@ function XlsxPreview(props: { path: string }) {
       const { invoke } = (window as any).__TAURI__.core
       const html = await invoke("convert_xlsx_to_html_command", { path: props.path })
       xlsxCache.set(props.path, html)
-      setHtmlContent(html)
+      setRawHtml(html)
+      setActiveSheet(0)
       setLoading(false)
     } catch (err) {
       console.error("Failed to load XLSX:", err)
@@ -208,6 +240,24 @@ function XlsxPreview(props: { path: string }) {
           Open in Excel
         </Button>
       </div>
+      <Show when={!loading() && !error() && sheets().length > 1}>
+        <div class="flex gap-0 border-b border-border-subtle overflow-x-auto shrink-0">
+          <For each={sheets()}>
+            {(sheet, i) => (
+              <button
+                onClick={() => setActiveSheet(i())}
+                class={`px-4 py-2 text-13-regular whitespace-nowrap border-r border-border-subtle transition-colors ${
+                  activeSheet() === i()
+                    ? "bg-surface-elevated text-text-strong border-b-2 border-b-accent-base"
+                    : "text-text-weak hover:text-text-base hover:bg-surface-subtle"
+                }`}
+              >
+                {sheet.name}
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
       <div class="flex-1 overflow-auto">
         <Show when={loading()}>
           <div class="flex items-center justify-center h-full">
@@ -219,8 +269,8 @@ function XlsxPreview(props: { path: string }) {
             <div class="text-14-regular text-text-weak">{error()}</div>
           </div>
         </Show>
-        <Show when={htmlContent()}>
-          <div class="xlsx-container p-6" innerHTML={htmlContent()} />
+        <Show when={!loading() && !error() && sheets().length > 0}>
+          <div class="xlsx-container p-6" innerHTML={sheets()[activeSheet()]?.content ?? ""} />
         </Show>
       </div>
     </div>
