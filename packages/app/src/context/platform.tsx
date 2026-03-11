@@ -18,6 +18,9 @@ export type Platform = {
   /** App version */
   version?: string
 
+  /** Underlying OpenCode engine version */
+  opencodeVersion?: string
+
   /** Open a URL in the default browser */
   openLink(url: string): void
 

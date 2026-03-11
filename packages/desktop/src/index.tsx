@@ -25,6 +25,7 @@ import { check, type Update } from "@tauri-apps/plugin-updater"
 import { createResource, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { render } from "solid-js/web"
 import pkg from "../package.json"
+import opencodePkg from "../../opencode/package.json"
 import { initI18n, t } from "./i18n"
 import { UPDATER_ENABLED } from "./updater"
 import { webviewZoom } from "./webview-zoom"
@@ -82,6 +83,7 @@ const createPlatform = (): Platform => {
     platform: "desktop",
     os,
     version: pkg.version,
+    opencodeVersion: opencodePkg.version,
 
     async openDirectoryPickerDialog(opts) {
       const defaultPath = await wslHome()

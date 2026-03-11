@@ -30,7 +30,7 @@ jobs:
       - name: Build CLI
         run: ./packages/opencode/script/build.ts
         env:
-          OPENCODE_VERSION: "0.0.0-dev"
+          OPENCODE_VERSION: "0.5.0"
           OPENCODE_RELEASE: ""
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -129,3 +129,25 @@ jobs:
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.msi
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.app
           if-no-files-found: warn
+
+  publish-release:
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: openwork-desktop-*
+          path: release-artifacts
+          merge-multiple: false
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.5.0
+          name: OpenWork v0.5.0
+          draft: false
+          prerelease: false
+          files: release-artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

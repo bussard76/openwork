@@ -13,6 +13,7 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip, TooltipKeybind } from "@opencode-ai/ui/tooltip"
 import { type LocalProject } from "@/context/layout"
 import { ResizeHandle } from "@opencode-ai/ui/resize-handle"
+import { usePlatform } from "@/context/platform"
 
 export const SidebarContent = (props: {
   mobile?: boolean
@@ -44,6 +45,7 @@ export const SidebarContent = (props: {
 }): JSX.Element => {
   const placement = () => (props.mobile ? "bottom" : "right")
   const expanded = () => props.projectColumnWidth() >= 120
+  const platform = usePlatform()
 
   return (
     <div class="flex h-full w-full overflow-hidden">
@@ -199,6 +201,14 @@ export const SidebarContent = (props: {
               aria-label={props.helpLabel()}
             />
           </Tooltip>
+          <Show when={expanded() && platform.version}>
+            <div class="flex flex-col gap-0.5 mt-1">
+              <span class="text-10-regular text-text-weak opacity-50">v{platform.version}</span>
+              <Show when={platform.opencodeVersion}>
+                <span class="text-10-regular text-text-weak opacity-40">OpenCode v{platform.opencodeVersion}</span>
+              </Show>
+            </div>
+          </Show>
         </div>
         <Show when={!props.mobile}>
           <ResizeHandle

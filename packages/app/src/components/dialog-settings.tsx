@@ -1,4 +1,4 @@
-import { Component } from "solid-js"
+import { Show, type Component } from "solid-js"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { Tabs } from "@opencode-ai/ui/tabs"
 import { Icon } from "@opencode-ai/ui/icon"
@@ -57,6 +57,9 @@ export const DialogSettings: Component = () => {
             <div class="flex flex-col gap-1 pl-1 py-1 text-12-medium text-text-weak">
               <span>{language.t("app.name.desktop")}</span>
               <span class="text-11-regular">v{platform.version}</span>
+              <Show when={platform.opencodeVersion}>
+                <span class="text-11-regular opacity-60">OpenCode v{platform.opencodeVersion}</span>
+              </Show>
             </div>
           </div>
         </Tabs.List>
