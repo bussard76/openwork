@@ -14,6 +14,8 @@ stages:
 build-cli:
   stage: build-cli
   image: oven/bun:latest
+  tags:
+    - docker
   script:
     - bun install
     - ./packages/opencode/script/build.ts
