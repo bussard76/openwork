@@ -15,7 +15,6 @@ build-cli:
   stage: build-cli
   tags:
     - macos
-    - arm64
   script:
     - export PATH="$HOME/.bun/bin:$PATH"
     - bun install
