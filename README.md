@@ -1,141 +1,61 @@
 <p align="center">
-  <a href="https://opencode.ai">
-    <picture>
-      <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
-      <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
-      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenCode logo">
-    </picture>
-  </a>
+  <picture>
+    <source srcset="packages/identity/mark-512x512.png" media="(prefers-color-scheme: dark)">
+    <source srcset="packages/identity/mark-512x512-light.png" media="(prefers-color-scheme: light)">
+    <img src="packages/identity/mark-512x512.png" alt="OpenWork logo" width="80">
+  </picture>
 </p>
-<p align="center"><strong>OpenWork</strong> — your AI work client for the everyday office worker.</p>
+<h1 align="center">OpenWork</h1>
+<p align="center">Your AI work client for the everyday office worker.</p>
 <p align="center">
-  Built on <a href="https://opencode.ai">OpenCode</a>, OpenWork gives non-technical users a seamless experience to:<br>
-  work with <strong>MS Office files</strong> (Word, Excel, PowerPoint) · chat against <strong>live internet knowledge</strong> · use <strong>MCPs</strong> and <strong>Skills</strong> without any setup friction.
+  Work with <strong>MS Office files</strong> · chat against <strong>live internet knowledge</strong> · use <strong>MCPs</strong> and <strong>Skills</strong> without any setup friction.
 </p>
 <p align="center">Think of it as Claude for Work — but open source, provider-agnostic, and fully customizable.</p>
-<p align="center">
-  <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
-</p>
 
 [![OpenWork Screenshot](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
 
 ---
 
-### What is OpenWork?
+### Running the Desktop App (macOS)
 
-OpenWork is an AI work client for everyday office workers — built on the open-source [OpenCode](https://opencode.ai) engine.
+OpenWork is currently in early development — there are no pre-built binaries yet. To run it locally:
 
-Where OpenCode targets developers in the terminal, OpenWork targets anyone who works with documents, spreadsheets, and presentations. It provides a polished desktop interface that lets you:
+**Prerequisites:** Rust toolchain required. Install via [rustup](https://rustup.rs/):
 
-- **Open and work with MS Office files** — Word (`.docx`), Excel (`.xlsx`), PowerPoint (`.pptx`) directly in the client
-- **Chat with internet knowledge** — built-in web search keeps answers current
-- **Use MCPs seamlessly** — connect any Model Context Protocol server without configuration friction
-- **Apply Skills** — reusable AI workflows that automate repetitive office tasks
-- **Stay provider-agnostic** — works with Claude, OpenAI, Google, or local models
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
-> Think of it as a self-hosted, open-source alternative to Claude for Work — customizable by your team and deployable on your own infrastructure.
+**Start the app:**
+
+```bash
+git clone https://gitlabci.exxeta.info/sage/openwork.git
+cd openwork
+bun install
+TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin bun run --cwd packages/desktop tauri dev
+```
+
+Use `x86_64-apple-darwin` instead if you're on Intel Mac.
+
+On first run, this builds the `opencode` binary from source — expect a few minutes. After that the Tauri window opens automatically.
 
 ---
 
-### Installation
+### What is OpenWork?
 
-```bash
-# YOLO
-curl -fsSL https://opencode.ai/install | bash
+OpenWork is built on the open-source [OpenCode](https://opencode.ai) engine. Where OpenCode targets developers in the terminal, OpenWork targets anyone who works with documents, spreadsheets, and presentations:
 
-# Package managers
-npm i -g opencode-ai@latest        # or bun/pnpm/yarn
-scoop install opencode             # Windows
-choco install opencode             # Windows
-brew install anomalyco/tap/opencode # macOS and Linux (recommended, always up to date)
-brew install opencode              # macOS and Linux (official brew formula, updated less)
-sudo pacman -S opencode            # Arch Linux (Stable)
-paru -S opencode-bin               # Arch Linux (Latest from AUR)
-mise use -g opencode               # Any OS
-nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev branch
-```
+- **MS Office integration** — open, preview, and work with Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) directly in the client
+- **Internet-grounded chat** — built-in web search keeps answers current
+- **MCPs** — connect any Model Context Protocol server without configuration friction
+- **Skills** — reusable AI workflows that automate repetitive office tasks
+- **Provider-agnostic** — works with Claude, OpenAI, Google, or local models
 
-> [!TIP]
-> Remove versions older than 0.1.x before installing.
-
-### Desktop App (BETA)
-
-OpenCode is also available as a desktop application. Download directly from the [releases page](https://github.com/anomalyco/opencode/releases) or [opencode.ai/download](https://opencode.ai/download).
-
-| Platform              | Download                              |
-| --------------------- | ------------------------------------- |
-| macOS (Apple Silicon) | `opencode-desktop-darwin-aarch64.dmg` |
-| macOS (Intel)         | `opencode-desktop-darwin-x64.dmg`     |
-| Windows               | `opencode-desktop-windows-x64.exe`    |
-| Linux                 | `.deb`, `.rpm`, or AppImage           |
-
-```bash
-# macOS (Homebrew)
-brew install --cask opencode-desktop
-# Windows (Scoop)
-scoop bucket add extras; scoop install extras/opencode-desktop
-```
-
-#### Installation Directory
-
-The install script respects the following priority order for the installation path:
-
-1. `$OPENCODE_INSTALL_DIR` - Custom installation directory
-2. `$XDG_BIN_DIR` - XDG Base Directory Specification compliant path
-3. `$HOME/bin` - Standard user binary directory (if it exists or can be created)
-4. `$HOME/.opencode/bin` - Default fallback
-
-```bash
-# Examples
-OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash
-XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
-```
-
-### Agents
-
-OpenCode includes two built-in agents you can switch between with the `Tab` key.
-
-- **build** - Default, full-access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
-
-Also included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
-
-Learn more about [agents](https://opencode.ai/docs/agents).
-
-### Documentation
-
-For more info on how to configure OpenCode, [**head over to our docs**](https://opencode.ai/docs).
+---
 
 ### Contributing
 
-If you're interested in contributing to OpenCode, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
-
-### Building on OpenCode
-
-If you are working on a project that's related to OpenCode and is using "opencode" as part of its name, for example "opencode-dashboard" or "opencode-mobile", please add a note to your README to clarify that it is not built by the OpenCode team and is not affiliated with us in any way.
-
-### FAQ
-
-#### How is OpenWork different from Claude for Work (Claude.ai Teams)?
-
-OpenWork is inspired by the user experience of Claude for Work, but built on the open-source OpenCode engine. Key differences:
-
-- **Open source** — fully inspectable and self-hostable
-- **Provider-agnostic** — works with Claude, OpenAI, Google, or local models; not locked to Anthropic
-- **MS Office integration** — open, preview, and work with Word, Excel, and PowerPoint files directly in the client
-- **MCP & Skills support** — connect any MCP server or define reusable Skills without IT involvement
-- **Internet-grounded chat** — built-in web search so answers are current, not cut off at a training date
-- **Desktop app** — native experience via Tauri, available for macOS, Windows, and Linux
-
-#### How is OpenWork different from OpenCode (the upstream project)?
-
-OpenCode is a developer tool (AI coding agent). OpenWork takes the same engine and shapes it for **everyday office workers** — no terminal, no code, no friction. The target user is someone who works with documents, spreadsheets, and presentations and wants AI that just works.
+If you're interested in contributing, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
 
 ---
 
