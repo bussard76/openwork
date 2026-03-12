@@ -55,8 +55,4 @@ OpenWork is built on the open-source [OpenCode](https://opencode.ai) engine. Whe
 
 ### Contributing
 
-If you're interested in contributing, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
-
----
-
-**Join our community** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+Contributions are welcome — feel free to open issues or submit pull requests.
