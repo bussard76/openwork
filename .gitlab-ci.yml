@@ -1,0 +1,186 @@
+workflow:
+  name: "Build OpenWork Desktop ($CI_COMMIT_REF_NAME)"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+stages:
+  - build-cli
+  - build-tauri
+  - publish
+
+# ── CLI Build ──────────────────────────────────────────────────────────────────
+
+build-cli:
+  stage: build-cli
+  image: oven/bun:latest
+  script:
+    - bun install
+    - ./packages/opencode/script/build.ts
+    - echo "OPENCODE_VERSION=$(bun -e "console.log(require('./packages/desktop/package.json').version)")" > version.env
+  variables:
+    OPENCODE_RELEASE: ""
+    GH_TOKEN: ""
+    GH_REPO: ""
+  artifacts:
+    name: opencode-cli
+    paths:
+      - packages/opencode/dist/
+    reports:
+      dotenv: version.env
+    expire_in: 1 day
+
+# ── Tauri Build Matrix ─────────────────────────────────────────────────────────
+
+build-tauri-macos-arm64:
+  stage: build-tauri
+  needs:
+    - job: build-cli
+      artifacts: true
+  tags:
+    - macos
+    - arm64
+  variables:
+    TARGET: aarch64-apple-darwin
+    CLI_NAME: opencode-darwin-arm64
+  before_script:
+    - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --target $TARGET
+    - source "$HOME/.cargo/env"
+    - curl -fsSL https://bun.sh/install | bash
+    - export PATH="$HOME/.bun/bin:$PATH"
+  script:
+    - bun install
+    - mkdir -p packages/desktop/src-tauri/sidecars
+    - |
+      SRC="packages/opencode/dist/${CLI_NAME}/bin/opencode"
+      DEST="packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}"
+      cp "$SRC" "$DEST"
+      chmod +x "$DEST"
+    - cd packages/desktop && bunx tauri build --target $TARGET --config ./src-tauri/tauri.openwork.conf.json
+    - |
+      APP="src-tauri/target/${TARGET}/release/bundle/macos/OpenWork.app"
+      codesign --deep --force --sign - "$APP"
+    - |
+      BUNDLE="src-tauri/target/${TARGET}/release/bundle"
+      DMG=$(find "$BUNDLE/dmg" -name "*.dmg" | head -1)
+      APP="$BUNDLE/macos/OpenWork.app"
+      TMP=$(mktemp -d)
+      cp -r "$APP" "$TMP/"
+      NEW_DMG="${DMG%.dmg}-signed.dmg"
+      hdiutil create -volname "OpenWork" -srcfolder "$TMP" -ov -format UDZO "$NEW_DMG"
+      rm "$DMG"
+      mv "$NEW_DMG" "$DMG"
+      rm -rf "$TMP"
+  artifacts:
+    name: openwork-desktop-macOS-arm64
+    paths:
+      - packages/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+    expire_in: 7 days
+
+build-tauri-macos-x64:
+  stage: build-tauri
+  needs:
+    - job: build-cli
+      artifacts: true
+  tags:
+    - macos
+    - x86_64
+  variables:
+    TARGET: x86_64-apple-darwin
+    CLI_NAME: opencode-darwin-x64
+  before_script:
+    - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --target $TARGET
+    - source "$HOME/.cargo/env"
+    - curl -fsSL https://bun.sh/install | bash
+    - export PATH="$HOME/.bun/bin:$PATH"
+  script:
+    - bun install
+    - mkdir -p packages/desktop/src-tauri/sidecars
+    - |
+      SRC="packages/opencode/dist/${CLI_NAME}/bin/opencode"
+      DEST="packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}"
+      cp "$SRC" "$DEST"
+      chmod +x "$DEST"
+    - cd packages/desktop && bunx tauri build --target $TARGET --config ./src-tauri/tauri.openwork.conf.json
+    - |
+      APP="src-tauri/target/${TARGET}/release/bundle/macos/OpenWork.app"
+      codesign --deep --force --sign - "$APP"
+    - |
+      BUNDLE="src-tauri/target/${TARGET}/release/bundle"
+      DMG=$(find "$BUNDLE/dmg" -name "*.dmg" | head -1)
+      APP="$BUNDLE/macos/OpenWork.app"
+      TMP=$(mktemp -d)
+      cp -r "$APP" "$TMP/"
+      NEW_DMG="${DMG%.dmg}-signed.dmg"
+      hdiutil create -volname "OpenWork" -srcfolder "$TMP" -ov -format UDZO "$NEW_DMG"
+      rm "$DMG"
+      mv "$NEW_DMG" "$DMG"
+      rm -rf "$TMP"
+  artifacts:
+    name: openwork-desktop-macOS-x64
+    paths:
+      - packages/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+    expire_in: 7 days
+
+build-tauri-windows-x64:
+  stage: build-tauri
+  needs:
+    - job: build-cli
+      artifacts: true
+  tags:
+    - windows
+    - x86_64
+  variables:
+    TARGET: x86_64-pc-windows-msvc
+    CLI_NAME: opencode-windows-x64
+  before_script:
+    - powershell -Command "irm https://bun.sh/install.ps1 | iex"
+    - $env:PATH = "$env:USERPROFILE\.bun\bin;$env:PATH"
+    - rustup target add $env:TARGET
+  script:
+    - bun install
+    - New-Item -ItemType Directory -Force -Path packages/desktop/src-tauri/sidecars
+    - |
+      $SRC = "packages/opencode/dist/${CLI_NAME}/bin/opencode.exe"
+      $DEST = "packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}.exe"
+      Copy-Item $SRC $DEST
+    - cd packages/desktop; bunx tauri build --target $env:TARGET --config ./src-tauri/tauri.openwork.conf.json
+  artifacts:
+    name: openwork-desktop-Windows-x64
+    paths:
+      - packages/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+      - packages/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+    expire_in: 7 days
+
+# ── Publish Release ────────────────────────────────────────────────────────────
+
+publish-release:
+  stage: publish
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build-tauri-macos-arm64
+      artifacts: true
+    - job: build-tauri-macos-x64
+      artifacts: true
+    - job: build-tauri-windows-x64
+      artifacts: true
+  script:
+    - echo "Publishing release v${OPENCODE_VERSION}"
+  release:
+    tag_name: "v${OPENCODE_VERSION}"
+    name: "OpenWork v${OPENCODE_VERSION}"
+    description: "OpenWork Desktop v${OPENCODE_VERSION}"
+    assets:
+      links:
+        - name: "OpenWork macOS arm64 (DMG)"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/raw/packages/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/OpenWork_${OPENCODE_VERSION}_aarch64.dmg?job=build-tauri-macos-arm64"
+          link_type: package
+        - name: "OpenWork macOS x64 (DMG)"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/raw/packages/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/OpenWork_${OPENCODE_VERSION}_x64.dmg?job=build-tauri-macos-x64"
+          link_type: package
+        - name: "OpenWork Windows x64 (Installer)"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/raw/packages/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/OpenWork_${OPENCODE_VERSION}_x64-setup.exe?job=build-tauri-windows-x64"
+          link_type: package
+        - name: "OpenWork Windows x64 (MSI)"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/raw/packages/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/OpenWork_${OPENCODE_VERSION}_x64_en-US.msi?job=build-tauri-windows-x64"
+          link_type: package
