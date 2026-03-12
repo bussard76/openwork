@@ -12,7 +12,7 @@
 </p>
 <p align="center">Think of it as Claude for Work — but open source, provider-agnostic, and fully customizable.</p>
 
-[![OpenWork Screenshot](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+![OpenWork Screenshot](docs/Screenshot.png)
 
 ---
 
