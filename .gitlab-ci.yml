@@ -13,10 +13,11 @@ stages:
 
 build-cli:
   stage: build-cli
-  image: oven/bun:latest
   tags:
-    - docker
+    - macos
+    - arm64
   script:
+    - export PATH="$HOME/.bun/bin:$PATH"
     - bun install
     - ./packages/opencode/script/build.ts
     - echo "OPENCODE_VERSION=$(bun -e "console.log(require('./packages/desktop/package.json').version)")" > version.env
