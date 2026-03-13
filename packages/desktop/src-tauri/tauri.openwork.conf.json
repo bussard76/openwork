@@ -4,7 +4,7 @@
   "identifier": "ai.openwork.desktop",
   "mainBinaryName": "OpenWork",
   "bundle": {
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/dev/32x32.png",
       "icons/dev/128x128.png",
@@ -20,5 +20,10 @@
       }
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEyMEYyODJFMjA1NTE0MDMKUldRREZGVWdMaWdQRWdtRzB6cXpNT25sYTR6RXU0UzJ3Qk5yT3ljWS9wQWRESkFZMzJHLzBWWHIK",
+      "endpoints": ["https://github.com/bussard76/openwork/releases/latest/download/latest.json"]
+    }
+  }
 }
