@@ -148,6 +148,9 @@ jobs:
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.dmg
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.exe
             packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.msi
+            packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.tar.gz
+            packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.nsis.zip
+            packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/**/*.sig
           if-no-files-found: warn
 
   publish-release:
@@ -164,7 +167,7 @@ jobs:
       - name: Collect release files
         run: |
           mkdir -p dist
-          find release-artifacts -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" \) -exec cp {} dist/ \;
+          find release-artifacts -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.tar.gz" -o -name "*.nsis.zip" -o -name "*.sig" -o -name "latest.json" \) -exec cp {} dist/ \;
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
