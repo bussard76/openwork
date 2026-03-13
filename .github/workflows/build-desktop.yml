@@ -108,6 +108,22 @@ jobs:
           $DEST = "packages/desktop/src-tauri/sidecars/opencode-cli-${TARGET}.exe"
           Copy-Item $SRC $DEST
 
+      - name: Import macOS signing certificate
+        if: runner.os == 'macOS'
+        env:
+          CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+          CERT_P12_PASSWORD: ${{ secrets.APPLE_CERT_P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/signing.keychain-db
+          echo "$CERT_P12_BASE64" | base64 --decode -o $RUNNER_TEMP/cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" -P "$CERT_P12_PASSWORD" -T /usr/bin/codesign
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         with:
@@ -118,27 +134,14 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Ad-hoc sign macOS app
-        if: runner.os == 'macOS'
-        run: |
-          APP="packages/desktop/src-tauri/target/${{ matrix.settings.target }}/release/bundle/macos/OpenWork.app"
-          codesign --deep --force --sign - "$APP"
-
-      - name: Repackage DMG with signed app
-        if: runner.os == 'macOS'
-        run: |
-          TARGET=${{ matrix.settings.target }}
-          BUNDLE="packages/desktop/src-tauri/target/${TARGET}/release/bundle"
-          DMG=$(find "$BUNDLE/dmg" -name "*.dmg" | head -1)
-          APP="$BUNDLE/macos/OpenWork.app"
-          TMP=$(mktemp -d)
-          cp -r "$APP" "$TMP/"
-          NEW_DMG="${DMG%.dmg}-signed.dmg"
-          hdiutil create -volname "OpenWork" -srcfolder "$TMP" -ov -format UDZO "$NEW_DMG"
-          rm "$DMG"
-          mv "$NEW_DMG" "$DMG"
-          rm -rf "$TMP"
+      - name: Cleanup keychain
+        if: runner.os == 'macOS' && always()
+        run: security delete-keychain $RUNNER_TEMP/signing.keychain-db || true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
