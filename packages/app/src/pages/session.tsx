@@ -1295,6 +1295,16 @@ export default function Page() {
               onResize={layout.session.resize}
             />
           </Show>
+          <Show when={desktopFileTreeOpen() && !desktopReviewOpen()}>
+            <ResizeHandle
+              direction="horizontal"
+              edge="end"
+              size={layout.fileTree.width()}
+              min={200}
+              max={typeof window === "undefined" ? 800 : window.innerWidth * 0.6}
+              onResize={layout.fileTree.resize}
+            />
+          </Show>
         </div>
 
         <SessionSidePanel reviewPanel={reviewPanel} activeDiff={tree.activeDiff} focusReviewDiff={focusReviewDiff} />

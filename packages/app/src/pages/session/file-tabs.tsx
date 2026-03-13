@@ -900,6 +900,7 @@ export function FileTabContent(props: { tab: string }) {
     >
       <Dynamic
         component={codeComponent}
+        mode="text"
         file={{
           name: path() ?? "",
           contents: source,

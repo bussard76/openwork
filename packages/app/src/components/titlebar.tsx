@@ -202,20 +202,20 @@ export function Titlebar() {
             <Button
               variant="ghost"
               class="group/sidebar-toggle titlebar-icon w-8 h-6 p-0 box-border"
-              onClick={layout.sidebar.toggle}
+              onClick={layout.projectColumn.toggleHidden}
               aria-label={language.t("command.sidebar.toggle")}
-              aria-expanded={layout.sidebar.opened()}
+              aria-expanded={!layout.projectColumn.hidden()}
             >
               <div class="relative flex items-center justify-center size-4 [&>*]:absolute [&>*]:inset-0">
                 <Icon
                   size="small"
-                  name={layout.sidebar.opened() ? "layout-left-partial" : "layout-left"}
+                  name={layout.projectColumn.hidden() ? "layout-left-partial" : "layout-left"}
                   class="group-hover/sidebar-toggle:hidden"
                 />
                 <Icon size="small" name="layout-left-partial" class="hidden group-hover/sidebar-toggle:inline-block" />
                 <Icon
                   size="small"
-                  name={layout.sidebar.opened() ? "layout-left" : "layout-left-partial"}
+                  name={layout.projectColumn.hidden() ? "layout-left" : "layout-left-partial"}
                   class="hidden group-active/sidebar-toggle:inline-block"
                 />
               </div>

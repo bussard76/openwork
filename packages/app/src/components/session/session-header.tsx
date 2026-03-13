@@ -614,6 +614,38 @@ export function SessionHeader() {
               <div class="flex items-center gap-1">
                 <div class="hidden md:flex items-center gap-1 shrink-0">
                   <TooltipKeybind
+                    title={language.t("command.sidebar.toggle")}
+                    keybind={command.keybind("sidebar.toggle")}
+                  >
+                    <Button
+                      variant="ghost"
+                      class="group/sidebar-toggle titlebar-icon w-8 h-6 p-0 box-border"
+                      onClick={() => layout.projectColumn.toggleHidden()}
+                      aria-label={language.t("command.sidebar.toggle")}
+                      aria-expanded={!layout.projectColumn.hidden()}
+                      aria-controls="sidebar-nav-desktop"
+                    >
+                      <div class="relative flex items-center justify-center size-4 [&>*]:absolute [&>*]:inset-0">
+                        <Icon
+                          size="small"
+                          name={layout.projectColumn.hidden() ? "layout-left-partial" : "layout-left"}
+                          class="group-hover/sidebar-toggle:hidden"
+                        />
+                        <Icon
+                          size="small"
+                          name="layout-left-partial"
+                          class="hidden group-hover/sidebar-toggle:inline-block"
+                        />
+                        <Icon
+                          size="small"
+                          name={layout.projectColumn.hidden() ? "layout-left" : "layout-left-partial"}
+                          class="hidden group-active/sidebar-toggle:inline-block"
+                        />
+                      </div>
+                    </Button>
+                  </TooltipKeybind>
+
+                  <TooltipKeybind
                     title={language.t("command.terminal.toggle")}
                     keybind={command.keybind("terminal.toggle")}
                   >

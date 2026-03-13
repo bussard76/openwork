@@ -870,7 +870,7 @@ export default function Layout(props: ParentProps) {
         title: language.t("command.sidebar.toggle"),
         category: language.t("command.category.view"),
         keybind: "mod+b",
-        onSelect: () => layout.sidebar.toggle(),
+        onSelect: () => layout.projectColumn.toggleHidden(),
       },
       {
         id: "project.open",
@@ -2074,11 +2074,9 @@ export default function Layout(props: ParentProps) {
         <nav
           aria-label={language.t("sidebar.nav.projectsAndSessions")}
           data-component="sidebar-nav-desktop"
-          classList={{
-            "hidden xl:block": true,
-            "relative shrink-0": true,
-          }}
+          class="relative shrink-0 hidden xl:block"
           style={{
+            display: layout.projectColumn.hidden() ? "none" : undefined,
             width: (() => {
               const proj = layout.projectColumn.width()
               if (layout.sidebar.opened()) {

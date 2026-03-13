@@ -240,6 +240,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           width: DEFAULT_PROJECT_COLUMN_WIDTH,
           listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
           listCollapsed: false,
+          hidden: false,
         },
         terminal: {
           height: DEFAULT_TERMINAL_HEIGHT,
@@ -635,6 +636,43 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           setStore("projectColumn", "listHeight", height)
         },
         listCollapsed: createMemo(() => store.projectColumn?.listCollapsed ?? false),
+        hidden: createMemo(() => store.projectColumn?.hidden ?? false),
+        hide() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: false,
+              hidden: true,
+            })
+            return
+          }
+          setStore("projectColumn", "hidden", true)
+        },
+        show() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: false,
+              hidden: false,
+            })
+            return
+          }
+          setStore("projectColumn", "hidden", false)
+        },
+        toggleHidden() {
+          if (!store.projectColumn) {
+            setStore("projectColumn", {
+              width: DEFAULT_PROJECT_COLUMN_WIDTH,
+              listHeight: DEFAULT_PROJECT_LIST_HEIGHT,
+              listCollapsed: false,
+              hidden: true,
+            })
+            return
+          }
+          setStore("projectColumn", "hidden", (x) => !x)
+        },
         collapseList() {
           if (!store.projectColumn) {
             setStore("projectColumn", {
