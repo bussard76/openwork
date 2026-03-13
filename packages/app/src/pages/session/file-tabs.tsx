@@ -11,6 +11,7 @@ import { Mark } from "@opencode-ai/ui/logo"
 import { Tabs } from "@opencode-ai/ui/tabs"
 import { ScrollView } from "@opencode-ai/ui/scroll-view"
 import { Button } from "@opencode-ai/ui/button"
+import { Markdown } from "@opencode-ai/ui/markdown"
 import { useLayout } from "@/context/layout"
 import { selectionFromLines, useFile, type FileSelection, type FileState, type SelectedLineRange } from "@/context/file"
 import { useComments } from "@/context/comments"
@@ -503,6 +504,15 @@ export function FileTabContent(props: { tab: string }) {
     if (isPptx()) return pptxPath()
     return file.pathFromTab(props.tab)
   })
+
+  const isMarkdown = createMemo(() => {
+    const p = path()
+    if (!p) return false
+    const lower = p.toLowerCase()
+    return lower.endsWith(".md") || lower.endsWith(".mdx")
+  })
+  const [mdView, setMdView] = createSignal<"text" | "rendered">("rendered")
+
   const state = createMemo((): FileState | undefined => {
     const p = path()
     if (!p) return
@@ -988,9 +998,29 @@ export function FileTabContent(props: { tab: string }) {
   )
 
   return (
-    <Tabs.Content value={props.tab} class="mt-3 relative h-full">
+    <Tabs.Content value={props.tab} class="mt-3 relative h-full flex flex-col">
+      <Show when={isMarkdown() && state()?.loaded}>
+        <div class="shrink-0 flex gap-1 px-3 py-1.5 border-b border-border-subtle">
+          <button
+            onClick={() => setMdView("rendered")}
+            class={`px-2.5 py-1 text-12-medium rounded transition-colors ${
+              mdView() === "rendered" ? "bg-surface-elevated text-text-strong" : "text-text-weak hover:text-text-base"
+            }`}
+          >
+            {language.t("session.markdown.rendered")}
+          </button>
+          <button
+            onClick={() => setMdView("text")}
+            class={`px-2.5 py-1 text-12-medium rounded transition-colors ${
+              mdView() === "text" ? "bg-surface-elevated text-text-strong" : "text-text-weak hover:text-text-base"
+            }`}
+          >
+            {language.t("session.markdown.text")}
+          </button>
+        </div>
+      </Show>
       <ScrollView
-        class="h-full"
+        class="flex-1 min-h-0"
         viewportRef={(el: HTMLDivElement) => {
           scroll = el
           restoreScroll()
@@ -1029,6 +1059,11 @@ export function FileTabContent(props: { tab: string }) {
                 <div class="text-14-semibold text-text-strong truncate">{path()?.split("/").pop()}</div>
                 <div class="text-14-regular text-text-weak">{language.t("session.files.binaryContent")}</div>
               </div>
+            </div>
+          </Match>
+          <Match when={state()?.loaded && isMarkdown() && mdView() === "rendered"}>
+            <div class="px-6 py-4 pb-40">
+              <Markdown text={contents()} class="text-14-regular" />
             </div>
           </Match>
           <Match when={state()?.loaded}>{renderCode(contents(), "pb-40")}</Match>

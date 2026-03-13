@@ -518,6 +518,9 @@ export const dict = {
   "session.files.all": "All files",
   "session.files.binaryContent": "Binary file (content cannot be displayed)",
 
+  "session.markdown.rendered": "Rendered",
+  "session.markdown.text": "Text",
+
   "session.messages.renderEarlier": "Render earlier messages",
   "session.messages.loadingEarlier": "Loading earlier messages...",
   "session.messages.loadEarlier": "Load earlier messages",
