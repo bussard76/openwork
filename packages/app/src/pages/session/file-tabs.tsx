@@ -444,7 +444,11 @@ function PptxPreview(props: { path: string }) {
         </Show>
         <Show when={state.error}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-14-regular text-text-weak">{state.error}</div>
+            <div class="text-14-regular text-text-weak">
+              {state.error?.includes("LibreOffice not found")
+                ? "Vorschau nicht verfügbar: LibreOffice ist nicht installiert."
+                : state.error}
+            </div>
           </div>
         </Show>
         <Show when={state.url}>
