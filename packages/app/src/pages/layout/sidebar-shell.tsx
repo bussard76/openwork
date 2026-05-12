@@ -1,4 +1,4 @@
-import { For, Show, type Accessor, type JSX } from "solid-js"
+import { createEffect, createMemo, For, Show, type Accessor, type JSX } from "solid-js"
 import {
   DragDropProvider,
   DragDropSensors,
@@ -43,16 +43,26 @@ export const SidebarContent = (props: {
   fileTreeOpened: Accessor<boolean>
   onToggleFileTree: () => void
 }): JSX.Element => {
+  const expanded = createMemo(() => !!props.mobile || props.opened())
   const placement = () => (props.mobile ? "bottom" : "right")
-  const expanded = () => props.projectColumnWidth() >= 120
   const platform = usePlatform()
+  let panel: HTMLDivElement | undefined
+
+  createEffect(() => {
+    const el = panel
+    if (!el) return
+    if (expanded()) {
+      el.removeAttribute("inert")
+      return
+    }
+    el.setAttribute("inert", "")
+  })
 
   return (
-    <div class="flex h-full w-full overflow-hidden">
-      {/* Project column */}
+    <div class="flex h-full w-full min-w-0 overflow-hidden">
       <div
-        class="relative shrink-0 bg-background-base flex flex-col items-stretch"
-        style={{ width: `${props.projectColumnWidth()}px` }}
+        data-component="sidebar-rail"
+        class="w-16 shrink-0 bg-background-base flex flex-col items-centers overflow-hidden"
         onMouseMove={props.aimMove}
       >
         {/* openwork logo */}
@@ -221,8 +231,15 @@ export const SidebarContent = (props: {
         </Show>
       </div>
 
-      {/* Session panel — always visible */}
-      <Show when={props.opened()}>{props.renderPanel()}</Show>
+      <div
+        ref={(el) => {
+          panel = el
+        }}
+        classList={{ "flex-1 flex h-full min-h-0 min-w-0 overflow-hidden": true, "pointer-events-none": !expanded() }}
+        aria-hidden={!expanded()}
+      >
+        {props.renderPanel()}
+      </div>
     </div>
   )
 }
