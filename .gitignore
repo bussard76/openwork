@@ -29,3 +29,8 @@ logs/
 *.bun-build
 tsconfig.tsbuildinfo
 builds/
+
+# OpenCode memory (may contain secrets)
+.opencode/memory-working/
+.opencode/memory-core/
+.opencode/package-lock.json
